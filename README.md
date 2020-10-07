@@ -46,7 +46,7 @@ Multi-layer neural network with regularization, from scratch.
 ## Autoencoder
 [![Autoencoder](https://img.shields.io/badge/pluto-flux%20autoencoder-00505c)](http://htmlpreview.github.io/?https://raw.githubusercontent.com/mossr/PlutoNotebooks/master/html/mnist_autoencoder.html)
 
-Autoencoder using MNIST with `Flux.jl`.
+Autoencoder applied to MNIST using `Flux.jl`.
 
 <p align="center">
   <img src="./img/mnist_autoencoder.png">
@@ -56,7 +56,7 @@ Autoencoder using MNIST with `Flux.jl`.
 ## Neural network classifier
 [![Neural network classifier](https://img.shields.io/badge/pluto-flux%20classifier-00505c)](http://htmlpreview.github.io/?https://raw.githubusercontent.com/mossr/PlutoNotebooks/master/html/mnist_mlp.html)
 
-MNIST multi-layer perceptron classifier using `Flux.jl`.
+Multi-layer perceptron classifier for MNIST using `Flux.jl`.
 
 <p align="center">
     <img src="https://latex.codecogs.com/svg.latex?\mathcal{L}(\hat{y},%20y)%20=%20-\frac{1}{n}\sum_{i=1}^n%20y%20\left(\hat{y}%20-%20\log\left(\sum%20e^{\hat{y}}\right)\right)">
