@@ -2,7 +2,7 @@
 Random Pluto notebooks in Julia.
 
 
-## Beta distribution
+## Beta distribution and Thompson sampling
 
 [![Beta distribution](https://img.shields.io/badge/pluto-beta%20distribution-00505c)](http://htmlpreview.github.io/?https://raw.githubusercontent.com/mossr/PlutoNotebooks/master/html/beta.html)
 <p align="center">
