@@ -4,6 +4,9 @@
 using Markdown
 using InteractiveUtils
 
+# ╔═╡ 41494860-f7e3-11ea-27bc-1b2515638b08
+using BeautifulAlgorithms
+
 # ╔═╡ c59d5960-f7e0-11ea-21a0-d9ced93de3f5
 using Distributions, PGFPlots, Statistics
 
@@ -15,14 +18,21 @@ begin
 	argmax(mean.(estimates))
 end
 
-# ╔═╡ 41494860-f7e3-11ea-27bc-1b2515638b08
-include("../src/thompson_sampling.jl")
-
 # ╔═╡ bb2af0f2-f7e0-11ea-037c-45857eea5fd7
-md"# Beta Distribution"
+md"# Thompson Sampling"
 
 # ╔═╡ 4f7cd780-f7e3-11ea-13f9-79626222bcd6
 bt = thompson_sampling(ones(3), ones(3), xₜ->[0.1, 0.5, 0.6][xₜ]; T=10000)
+
+# ╔═╡ 1931d840-07ee-11eb-329f-3f7bc95a3d86
+md"""
+![](https://raw.githubusercontent.com/mossr/BeautifulAlgorithms.jl/master/img/svg/thompson_sampling.svg)
+"""
+
+# ╔═╡ 4ae318e0-07ee-11eb-1e9e-1706a7e7c74f
+md"""
+# Beta Distribution
+"""
 
 # ╔═╡ c0cb5ef0-f7e0-11ea-27d4-8b0dd09e98e1
 function plot_beta(B=[Beta(5,3)])
@@ -48,6 +58,8 @@ plot_beta(bt)
 # ╟─bb2af0f2-f7e0-11ea-037c-45857eea5fd7
 # ╠═41494860-f7e3-11ea-27bc-1b2515638b08
 # ╠═4f7cd780-f7e3-11ea-13f9-79626222bcd6
+# ╟─1931d840-07ee-11eb-329f-3f7bc95a3d86
+# ╟─4ae318e0-07ee-11eb-1e9e-1706a7e7c74f
 # ╠═c59d5960-f7e0-11ea-21a0-d9ced93de3f5
 # ╠═c0cb5ef0-f7e0-11ea-27d4-8b0dd09e98e1
 # ╠═c1200740-f7e3-11ea-0edf-d1d27c46ed57
