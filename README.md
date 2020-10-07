@@ -25,7 +25,7 @@ Random Pluto notebooks in Julia.
 </p>
 
 
-## K-means Clustering
+## K-means clustering
 
 [![K-means clustering](https://img.shields.io/badge/pluto-k--means%20clustering-00505c)](http://htmlpreview.github.io/?https://raw.githubusercontent.com/mossr/PlutoNotebooks/master/html/k_means_clustering.html)
 <p align="center">
@@ -74,6 +74,6 @@ MNIST multi-layer perceptron classifier using `Flux.jl`.
 
 
 ## Markov decision processes
-*(work in progress)*
+[![https://img.shields.io/badge/pluto-work%20in%20progress-orange](https://img.shields.io/badge/pluto-work%20in%20progress-orange)]()
 
 ⟨𝒮, 𝒜, 𝑅, 𝑇, γ⟩
