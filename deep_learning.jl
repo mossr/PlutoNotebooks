@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.11.14
+# v0.12.1
 
 using Markdown
 using InteractiveUtils
@@ -26,9 +26,9 @@ md"""
 
 # ╔═╡ 3f670290-0412-11eb-2004-39da4e0bf148
 begin
-    pkg"add Parameters"
-    pkg"add ScikitLearn"
-    pkg"add PyPlot"
+    Pkg.add("Parameters")
+    Pkg.add("ScikitLearn")
+    Pkg.add("PyPlot")
     pkg"add https://github.com/mossr/TikzNeuralNetworks.jl"
 end
 
@@ -139,6 +139,9 @@ end
     d𝐀 = Vector(undef, L+1) # activation gradients
 end
 
+# ╔═╡ e54aafae-01a9-11eb-3561-918c493bce9c
+nn = NeuralNetwork();
+
 # ╔═╡ 646c4e60-01b5-11eb-2e73-bf1da0ecb35a
 function plot_nn(nn::NeuralNetwork)
 	nn2 = TikzNeuralNetwork(input_size=nn.input_size,
@@ -157,9 +160,6 @@ function plot_nn(nn::NeuralNetwork)
 	end
 	return nn2
 end
-
-# ╔═╡ e54aafae-01a9-11eb-3561-918c493bce9c
-nn = NeuralNetwork();
 
 # ╔═╡ 6848ec50-01b5-11eb-0525-d1e80de80fc9
 plot_nn(nn)
@@ -225,13 +225,13 @@ Here we use the cross-entropy loss, or log-loss $\mathcal{L}$.
 md"$$\mathcal{L}(\hat{y},y) = -\bigl(y\log(\hat{y}) + (1-y)\log(1-\hat{y})\bigr)$$"
 
 # ╔═╡ 853d0d20-0159-11eb-0947-c54b0846fbc2
-loss(a, y) = -(y * log(a) + (1 - y) * log(1 - a))
+loss(ŷ, y) = -(y * log(ŷ) + (1 - y) * log(1 - ŷ))
 
 # ╔═╡ c3d7baf2-01ac-11eb-002a-ad7aba3a0e82
 md"$$\nabla\mathcal{L}(\hat{y},y)=-\frac{y}{\hat{y}} + \frac{1-y}{1-\hat{y}}$$"
 
 # ╔═╡ 0514c480-01a9-11eb-3ea8-915a020f5ca3
-∇loss(a, y) = -(y / a) + (1 - y)/(1 - a)
+∇loss(ŷ, y) = -(y / ŷ) + (1 - y)/(1 - ŷ)
 
 # ╔═╡ 8c3b9730-06cd-11eb-19f0-dfc5552fcecf
 md"""
@@ -255,7 +255,7 @@ $$\mathcal J(\mathbf{\hat Y}, \mathbf Y) = \underbrace{\frac{1}{m} \sum_{i=1}^{m
 """
 
 # ╔═╡ 3f2082b0-01ac-11eb-39cb-d70372d42349
-cost(𝐀, 𝐘, 𝐖, λ) = mean(loss.(𝐀, 𝐘)) .+ mean(L₂.(𝐖, λ))
+cost(𝐘̂, 𝐘, 𝐖, λ) = mean(loss.(𝐘̂, 𝐘)) .+ mean(L₂.(𝐖, λ))
 
 # ╔═╡ 799bd2f0-01ac-11eb-36bc-a91ee03ac43e
 md"""
@@ -437,10 +437,10 @@ end;
 begin
 	Random.seed!(0)
 	nnc = NeuralNetwork()
-	nnc.hidden_layer_sizes = [60, 40, 20, 1]
-	nnc.𝐠 = [ReLU, ReLU, ReLU, σ]
-	nnc.𝐠′ = [ReLU′, ReLU′, ReLU′, σ′]
-	nnc.λ = 0.005 # L₂ regularization
+	nnc.hidden_layer_sizes = [64, 32, 32, 1]
+	nnc.𝐠 = [ReLU, ReLU, tanh, σ]
+	nnc.𝐠′ = [ReLU′, ReLU′, tanh′, σ′]
+	nnc.λ = 0.0005 # L₂ regularization
 	trigger2 = nothing
 
 	train!(nnc, Xc, Yc; α=1.2, niters=10_000)
