@@ -74,6 +74,6 @@ Multi-layer perceptron classifier for MNIST using `Flux.jl`.
 
 
 ## Markov decision processes
-[![https://img.shields.io/badge/pluto-work%20in%20progress-orange](https://img.shields.io/badge/pluto-work%20in%20progress-orange)]()
+[![https://img.shields.io/badge/pluto-work%20in%20progress-orange](https://img.shields.io/badge/pluto-work%20in%20progress-orange)](https://github.com/mossr/PlutoNotebooks)
 
 ⟨𝒮, 𝒜, 𝑅, 𝑇, γ⟩
