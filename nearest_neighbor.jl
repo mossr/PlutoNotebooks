@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.11.14
+# v0.12.3
 
 using Markdown
 using InteractiveUtils
@@ -84,7 +84,7 @@ $$d(\mathbf v, \mathbf v^\prime) = \lVert \mathbf v - \mathbf v^\prime \rVert_2 
 dist_euclidean(𝐯, 𝐯′) = norm(𝐯 - 𝐯′, 2)
 
 # ╔═╡ 12970800-f7c4-11ea-35c4-058dfb1e9963
-voronoi(𝒟train, dist_manhattan)
+voronoi(𝒟train, dist_euclidean)
 
 # ╔═╡ 9cef4590-084e-11eb-245e-fdb1c7ec7999
 md"""
@@ -108,7 +108,7 @@ Random.seed!(0);
 
 # ╔═╡ b6b25b00-0850-11eb-2c76-b9f7a2140522
 md"""
-## Sorted along 2nd dimension
+## Sorted along $2$nd dimension
 """
 
 # ╔═╡ 22614250-084f-11eb-3d83-cf86d51471eb
@@ -125,7 +125,7 @@ voronoi(𝒟train_rand, dist_euclidean; xlim=(0, 1), ylim=(0, 1))
 
 # ╔═╡ 8a620e60-0850-11eb-3969-c91f0ac25a15
 md"""
-## Sorted along 1st dimension
+## Sorted along $1$st dimension
 """
 
 # ╔═╡ dd4bf280-0850-11eb-3e78-c54ae25fca17
