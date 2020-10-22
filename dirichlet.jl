@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.12.1
+# v0.12.4
 
 using Markdown
 using InteractiveUtils
@@ -35,6 +35,8 @@ $$p(\theta_{1:n} \mid \alpha_{1:n}, m_{1:n}) = \operatorname{Dir}(\theta_{1:n} \
 and a mean vector $𝛍$, whose $i$th component is
 
 $$\mu_i = \frac{\alpha_i}{\sum_{j=1}^n \alpha_j}.$$
+
+For more notebook, see [https://github.com/mossr/PlutoNotebooks](https://github.com/mossr/PlutoNotebooks)
 """
 
 # ╔═╡ e39a9b60-075f-11eb-2b10-736d5fa68716
