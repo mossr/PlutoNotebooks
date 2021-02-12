@@ -1,5 +1,5 @@
 ### A Pluto.jl notebook ###
-# v0.11.14
+# v0.12.18
 
 using Markdown
 using InteractiveUtils
@@ -68,7 +68,7 @@ D = map((l,w,s)->([l,w], Int(s.level)), iris[xlabel], iris[ylabel], iris[:Specie
 @bind T Slider(1:20, show_value=true, default=20)
 
 # ╔═╡ d2299f80-fd22-11ea-25f3-cb8d35d54a60
-(z, μ) = k_means_clustering(x->x, D, dist_euclidean, K; T=T)
+(z, μ) = k_means_clustering(x->x, D, K; T=T)
 
 # ╔═╡ 0698d230-fd24-11ea-09b5-238ea2484cfe
 begin
