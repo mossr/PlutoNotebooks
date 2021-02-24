@@ -2,6 +2,13 @@
 Random Pluto notebooks in Julia.
 
 
+## Gibbs sampling
+
+[![Gibbs sampling](https://img.shields.io/badge/pluto-gibbs%20sampling-00505c)](http://htmlpreview.github.io/?https://raw.githubusercontent.com/mossr/PlutoNotebooks/master/html/gibbs_sampling.html)
+<p align="center">
+  <a href="http://htmlpreview.github.io/?https://raw.githubusercontent.com/mossr/PlutoNotebooks/master/html/gibbs_sampling.html"><img src="./img/gibbs_sampling.png"></a>
+</p>
+
 ## Beta distribution and Thompson sampling
 
 [![Beta distribution](https://img.shields.io/badge/pluto-beta%20distribution-00505c)](http://htmlpreview.github.io/?https://raw.githubusercontent.com/mossr/PlutoNotebooks/master/html/beta.html)
@@ -59,7 +66,7 @@ Autoencoder applied to MNIST using `Flux.jl`.
 Multi-layer perceptron classifier for MNIST using `Flux.jl`.
 
 <p align="center">
-    <a href="http://htmlpreview.github.io/?https://raw.githubusercontent.com/mossr/PlutoNotebooks/master/html/mnist_mlp.html"><img src="https://latex.codecogs.com/svg.latex?\mathcal{L}(\hat{y},%20y)%20=%20-\frac{1}{n}\sum_{i=1}^n%20y%20\left(\hat{y}%20-%20\log\left(\sum%20e^{\hat{y}}\right)\right)"></a>
+    <a href="http://htmlpreview.github.io/?https://raw.githubusercontent.com/mossr/PlutoNotebooks/master/html/mnist_mlp.html"><img src="https://latex.codecogs.com/svg.latex?%5Cmathcal%7BL%7D%28%5Chat%7By%7D%2Cy%29%3D-%5Cfrac%7B1%7D%7Bn%7D%5Csum_%7Bi%3D1%7D%5Eny%5Cleft%28%5Chat%7By%7D-%5Clog%5Cleft%28%5Csum%20e%5E%7B%5Chat%7By%7D%7D%5Cright%29%5Cright%29"></a>
 </p>
 <p align="center">
     <a href="http://htmlpreview.github.io/?https://raw.githubusercontent.com/mossr/PlutoNotebooks/master/html/mnist_mlp.html"><img src="https://latex.codecogs.com/svg.latex?\mathcal{J}(\mathbf{\hat{y}},%20\mathbf{y})%20=%20\frac{1}{m}\sum%20\mathcal{L}(\hat{y},%20y)"></a>
