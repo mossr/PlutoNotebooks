@@ -2,6 +2,13 @@
 Random Pluto notebooks in Julia.
 
 
+## The EM algorithm
+
+[![EM algorithm](https://img.shields.io/badge/pluto-em%20algorithm-00505c)](http://htmlpreview.github.io/?https://raw.githubusercontent.com/mossr/PlutoNotebooks/master/html/em_algorithm.html)
+<p align="center">
+  <a href="http://htmlpreview.github.io/?https://raw.githubusercontent.com/mossr/PlutoNotebooks/master/html/em_algorithm.html"><img src="./img/em_algorithm.png"></a>
+</p>
+
 ## Gibbs sampling
 
 [![Gibbs sampling](https://img.shields.io/badge/pluto-gibbs%20sampling-00505c)](http://htmlpreview.github.io/?https://raw.githubusercontent.com/mossr/PlutoNotebooks/master/html/gibbs_sampling.html)
