@@ -4,9 +4,9 @@ Random Pluto notebooks in Julia.
 
 ## The EM algorithm
 
-[![EM algorithm](https://img.shields.io/badge/pluto-em%20algorithm-00505c)](http://htmlpreview.github.io/?https://raw.githubusercontent.com/mossr/PlutoNotebooks/master/html/em_algorithm.html)
+[![EM algorithm](https://img.shields.io/badge/pluto-em%20algorithm-00505c)](https://htmlview.glitch.me/?https://github.com/mossr/PlutoNotebooks/blob/master/html/em_algorithm.html)
 <p align="center">
-  <a href="http://htmlpreview.github.io/?https://raw.githubusercontent.com/mossr/PlutoNotebooks/master/html/em_algorithm.html"><img src="./img/em_algorithm.png"></a>
+  <a href="https://htmlview.glitch.me/?https://github.com/mossr/PlutoNotebooks/blob/master/html/em_algorithm.html"><img src="./img/em_algorithm.png"></a>
 </p>
 
 ## Gibbs sampling
