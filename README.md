@@ -2,6 +2,13 @@
 Random Pluto notebooks in Julia.
 
 
+## Value Iteration
+
+[![Value iteration](https://img.shields.io/badge/pluto-value%20iteration-00505c)](https://htmlview.glitch.me/?https://github.com/mossr/PlutoNotebooks/blob/master/html/value_iteration.html)
+<p align="center">
+  <a href="https://htmlview.glitch.me/?https://github.com/mossr/PlutoNotebooks/blob/master/html/value_iteration.html"><img src="./img/value_iteration.svg"></a>
+</p>
+
 ## The EM algorithm
 
 [![EM algorithm](https://img.shields.io/badge/pluto-em%20algorithm-00505c)](https://htmlview.glitch.me/?https://github.com/mossr/PlutoNotebooks/blob/master/html/em_algorithm.html)
