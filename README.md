@@ -18,9 +18,9 @@ Random Pluto notebooks in Julia.
 
 ## Gibbs sampling
 
-[![Gibbs sampling](https://img.shields.io/badge/pluto-gibbs%20sampling-00505c)](http://htmlpreview.github.io/?https://raw.githubusercontent.com/mossr/PlutoNotebooks/master/html/gibbs_sampling.html)
+[![Gibbs sampling](https://img.shields.io/badge/pluto-gibbs%20sampling-00505c)](https://htmlview.glitch.me/?https://raw.githubusercontent.com/mossr/PlutoNotebooks/master/html/gibbs_sampling.html)
 <p align="center">
-  <a href="http://htmlpreview.github.io/?https://raw.githubusercontent.com/mossr/PlutoNotebooks/master/html/gibbs_sampling.html"><img src="./img/gibbs_sampling.png"></a>
+  <a href="https://htmlview.glitch.me/?https://raw.githubusercontent.com/mossr/PlutoNotebooks/master/html/gibbs_sampling.html"><img src="./img/gibbs_sampling.png"></a>
 </p>
 
 ## Beta distribution and Thompson sampling
