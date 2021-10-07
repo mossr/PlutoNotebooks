@@ -22,9 +22,6 @@ using LinearAlgebra # for `dot`
 # ╔═╡ 478e9671-312a-41f0-8899-fb971147c996
 using PyCall
 
-# ╔═╡ 4c50fd12-c92c-4066-8f50-00938b95b1ff
-TableOfContents(aside=false)
-
 # ╔═╡ 8a67d915-ff69-425a-a4e4-d31eeb61ddb0
 md"""
 From the MATLAB `sub2ind` documentation:
@@ -40,6 +37,9 @@ From the MATLAB `ind2sub` documentation:
 
 # ╔═╡ 6c370fdd-e513-4c3d-8d9b-c0014c18913e
 LocalResource("img/ConvertLinearIndicesToSubscriptsForMatricesExample_01.png")
+
+# ╔═╡ 4c50fd12-c92c-4066-8f50-00938b95b1ff
+TableOfContents(aside=false)
 
 # ╔═╡ cd1f62f6-490a-4cbc-9669-d59fef04cbf8
 md"""
@@ -550,7 +550,7 @@ version = "1.2.0"
 # ╠═e4e56238-dde5-4f5b-9e36-8728ab4f4d92
 # ╟─d864a106-7649-43e8-b2fe-d17991456898
 # ╠═478e9671-312a-41f0-8899-fb971147c996
-# ╠═81b41745-2d23-4b4d-80f2-d2092f0e9742
+# ╟─81b41745-2d23-4b4d-80f2-d2092f0e9742
 # ╟─eea62400-97a0-424f-b11f-34323b61256e
 # ╟─f947e045-a546-4670-80dc-82b58d50451a
 # ╟─fa338faf-f66e-400e-959f-9ac6051adc85
