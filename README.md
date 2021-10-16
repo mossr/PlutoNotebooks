@@ -1,6 +1,15 @@
 # PlutoNotebooks
 Random Pluto notebooks in Julia.
 
+## Honerable Mentions / WIPs
+[![xkcd](https://img.shields.io/badge/pluto-xkcd%20grids--n--marbles-00505c)](https://htmlview.glitch.me/?https://github.com/mossr/PlutoNotebooks/blob/master/html/xkcd-grids-n-marbles.html)
+
+[![d-separation](https://img.shields.io/badge/pluto-d--separation-00505c)](https://htmlview.glitch.me/?https://github.com/mossr/PlutoNotebooks/blob/master/html/d_separation.html)
+
+[![sub2ind](https://img.shields.io/badge/pluto-subscript%20and%20linear%20indexing-00505c)](https://htmlview.glitch.me/?https://github.com/mossr/PlutoNotebooks/blob/master/html/subscript_and_linear_indexing.html)
+
+[![policy gradient](https://img.shields.io/badge/pluto-policy%20gradient%20estimation-00505c)](https://htmlview.glitch.me/?https://github.com/mossr/PlutoNotebooks/blob/master/html/policy_gradient_estimation.html)
+
 
 ## Value Iteration
 
