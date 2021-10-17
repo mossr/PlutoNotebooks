@@ -1,17 +1,8 @@
 ### A Pluto.jl notebook ###
-# v0.16.1
+# v0.16.0
 
 using Markdown
 using InteractiveUtils
-
-# This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
-macro bind(def, element)
-    quote
-        local el = $(esc(element))
-        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : missing
-        el
-    end
-end
 
 # ╔═╡ 2188062e-2e40-11ec-0800-ef091595f462
 using PlutoUI
@@ -32,6 +23,10 @@ using Reel
 # ╔═╡ 92b2d149-9562-4e3f-aaac-81f034e4f40d
 md"""
 # Grids-n-Marbles (xkcd)
+- "explain" xkcd: [https://xkcd.com/2529/](https://xkcd.com/2529/)
+- Github: [https://github.com/mossr/PlutoNotebooks](https://github.com/mossr/PlutoNotebooks)
+
+— [_Robert Moss_](https://github.com/mossr/)
 """
 
 # ╔═╡ 0588d18d-e00f-408a-a3cb-d1c409581496
@@ -45,14 +40,181 @@ TableOfContents(aside=false)
 
 # ╔═╡ 26b5a345-520d-4b20-881e-0e22da4c8671
 md"""
-## Markov decision process (MDP)
+# Markov decision process (MDP)
 We loosely define the problem as an MDP.
 """
 
+# ╔═╡ 2b49fff6-2593-4c2a-826e-c20fc255bfce
+md"""
+## State space
+"""
+
+# ╔═╡ c809732d-4962-4db3-b90a-786113183198
+md"""
+First we define the size of our grid; to mimic the xkcd comic use $(6,7)$.
+"""
+
+# ╔═╡ 73e84311-2dff-415a-b0fe-1a197cd6c980
+grid_x, grid_y = 20, 20
+
+# ╔═╡ aac4506f-18fc-4829-acd7-c7bd5f8a49a8
+md"""
+Random walking agent $(x,y)$ state.
+"""
+
+# ╔═╡ 1c00e61d-b6b0-44e5-8f78-d7ff235bf21b
+struct State # State definition
+	x::Int
+	y::Int
+end
+
+# ╔═╡ cefd2c25-c9a9-494c-b009-9d5c0aa01820
+md"""
+All possible discrete states.
+"""
+
+# ╔═╡ 77e33f7c-4822-4f21-ad8f-be706bad252c
+md"""
+A "null state" for indicating termination.
+"""
+
+# ╔═╡ 6d585210-3669-4fa1-80be-2e3be15106d8
+null_state = State(-1,-1)
+
+# ╔═╡ a143845c-b6b9-4317-b25c-6288192b4c4e
+𝒮 = [[State(x,y) for x=1:grid_x, y=1:grid_y]..., null_state] # State−space
+
+# ╔═╡ 7b86d934-0949-4595-95fc-ff957ad91515
+md"""
+## Action space
+"""
+
+# ╔═╡ b09d6259-da92-4d28-9604-5af35771204f
+md"""
+Random walking actions: cardinal directions.
+"""
+
+# ╔═╡ 260ee286-4aa7-4242-985e-e54d99c6ae7d
+@enum Action UP DOWN LEFT RIGHT # Action definition
+
+# ╔═╡ c02838ee-d854-4eee-b3ee-98cf105383b3
+md"""
+All possible discrete actions.
+"""
+
+# ╔═╡ 1eebffbe-bd4c-4244-89c5-ee7c26318d51
+𝒜 = [UP, DOWN, LEFT, RIGHT] # Action−space
+
+# ╔═╡ 78cb63eb-b3e1-4490-a8a6-49b508d45fa9
+md"""
+Function that applies an action $a$ from state $s$.
+"""
+
+# ╔═╡ 7f3257f5-f932-4638-86d0-4b189db9cebb
+apply(s,a) = Dict(
+	UP    => State(s.x, s.y+1),
+	DOWN  => State(s.x, s.y-1),
+	LEFT  => State(s.x-1, s.y),
+	RIGHT => State(s.x+1, s.y))[a]
+
+# ╔═╡ 3e1caef0-49fb-477f-9ad3-0a3970da9e24
+md"""
+## Transition function
+Restricted to only allow transitioning to non-visited states (breaks Markov assumption).
+"""
+
+# ╔═╡ 54685504-b94c-46f8-8c66-e4ef99614a3e
+function T(mdp, s, a=missing) # Transition function
+	mdp.data.simstate.visited[s] = mdp.data.simstate.time
+	if mdp.data.simstate.time % mdp.data.simstate.N == 0
+		push!(mdp.data.simstate.marbles, s) # place marble at state s
+	end			
+	mdp.data.simstate.time += 1
+	Nₐ = length(𝒜)
+	next_states = Vector{State}(undef, Nₐ)
+	probabilities = zeros(Nₐ)
+	visited = mdp.data.simstate.visited
+	prob = 1 / Nₐ
+	for (i, a′) in enumerate(𝒜)
+		destination = apply(s, a′)
+		next_states[i] = destination
+		not_visited = !haskey(visited, destination)
+		if 1 ≤ destination.x ≤ grid_x && 1 ≤ destination.y ≤ grid_y && not_visited
+			probabilities[i] += prob
+		end
+	end
+	if sum(probabilities) == 0 # no more non-visited states to explore
+		return Deterministic(null_state)
+	else
+		probabilities /= sum(probabilities) # normalize
+		return SparseCat(next_states, probabilities)
+	end
+end
+
+# ╔═╡ b75b9bde-a383-41fb-9ba3-11df9d943488
+md"""
+We use the generative approach so we can return `info` (consisting of the placed marble locations).
+"""
+
+# ╔═╡ fccc732e-292f-410a-b969-df34eba2100c
+function generate(mdp, s, a, rng)
+	sp = rand(T(mdp, s, a))
+	r = reward(mdp, s, missing, sp)
+	info = isterminal(mdp, sp) ? copy(mdp.data.simstate.marbles) : []
+	return (sp=sp, r=r, info=info)
+end
+
+# ╔═╡ 180d8682-d89b-441d-ac53-98f35f2d447c
+md"""
+## Reward function
+Only award a terminal reward based on the maximum number of marbles in a line.
+"""
+
+# ╔═╡ 025838fb-5c7a-44f8-8ac6-179cf1bf45f5
+md"""
+## Render
+Visualize the random walking agent (**white** circle).
+- **black** dropped marbles
+- **red** marbles indicate those in the longest line (connected by a dashed line)
+- **gray** gradient indicates the path over time (see `show_gradient`)
+"""
+
+# ╔═╡ 55502288-1da4-4c4c-a078-1c7daebb19f8
+Base.isless(s1::State, s2::State) = (s1.x ≤ s2.x)
+
+# ╔═╡ ecc78997-5001-4856-974a-a92728493d17
+md"""
+## MDP formulation
+"""
+
+# ╔═╡ 43464a08-8bb8-4d69-a4c0-5134dced743d
+@with_kw mutable struct SimulationState
+	time::Int = 1 # simulation time
+	N::Int = 5 # number of steps until we drop a marble
+	visited::Dict = Dict() # indicates nodes we've already visited
+	marbles::Vector{State} = [] # list of (x,y) positions of dropped marbles
+end
+
+# ╔═╡ c9fbfec0-28b7-4158-924f-b78930678c2c
+abstract type GridWorld <: MDP{State, Action} end
+
+# ╔═╡ b14ef52c-3fa9-453d-acaa-d799e8626670
+start_at_center = true
+
+# ╔═╡ b596dbf9-0e1b-4059-9cf5-31d9bb94360b
+function reset!(simstate::SimulationState)
+	simstate.time = 1
+	empty!(simstate.visited)
+	empty!(simstate.marbles)
+end
+
 # ╔═╡ ab1773de-da39-43cc-9512-0b3bd788e64a
 md"""
-## Counting marbles in a line
+# Counting marbles in a line
 """
+
+# ╔═╡ 8f6ba0b0-d1e8-45b7-b3f3-608f62ab600f
+Base.Tuple(s::State) = (s.x, s.y) 
 
 # ╔═╡ ebf0244d-1962-472a-a1ce-e0d75e293bf9
 function slope(s1, s2)
@@ -65,58 +227,41 @@ end
 
 # ╔═╡ d3e0c671-2252-4423-8f69-8a54a5214d51
 md"""
-This function is used as the terminal reward.
+Algorithm to recursively find the maximum number of marbles in a line. We anchor at each marble, then recurse for every other marble. This function is used as the terminal reward.
 """
 
-# ╔═╡ 8efcdf04-dfb8-4b7f-92e7-94237aaf3044
-function count_intersections(marbles, lineslope=nothing, line=[])
-	if isempty(marbles)
-		return line
-	end
-
-	if isempty(line)
-		# pick anchor from list of all marbles
-		anchor_marbles = marbles
-	else
-		# if `line` is provided, then anchor at the 2nd added (i.e. the "candidate")
-		anchor_marbles = [line[end]]
-		marbles = vcat(line[end], marbles)
-	end
-
-	# for every "anchor" marble
-	for (i, anchor) in enumerate(anchor_marbles)
-		for (j, other) in enumerate(marbles)
-			if i ≠ j
-				# pick another marble, draw a line to it (i.e., get slope)
-				@assert anchor != other
-				slope_a2o = slope(anchor, other)
-				anchor2other = [anchor, other]
-				# if no current slope or slopes match, then on the same line
-				if isnothing(lineslope) || lineslope == slope_a2o
-					if length(line) ≤ 2
-						line = anchor2other
-					else
-						line = vcat(line, other)
-					end
-					# for every candidate (non-same and not currently added)
-					# draw a line from anchor-to-candidate
-					# (bypassing the "other" for now)
-					for candidate in marbles
-						if candidate ∉ [anchor, other]
-							anchor2cand = [anchor, candidate]
-							# if the two lines are parallel (given same anchor),
-							# —> add the 2nd marble to the current longest line
-							slope_a2c = slope(anchor, candidate)
-							if slope_a2o == slope_a2c
-								if length(line) ≤ 2
-									line = [anchor, other, candidate]
-								end
-								marbs = setdiff(marbles, line)
-								# recurse, reducing the size of marbles::Vector and 
-								# anchoring at "other", keeping
-								# —> the [other, candidate] as the "running line"
-								return count_intersections(marbs, slope_a2c, line) 
+# ╔═╡ d6db2bba-98a1-410c-81da-72d2205e1725
+function longest_line_inner(anchor, marbles, lineslope=nothing, line=[anchor])
+	for (j, other) in enumerate(marbles)
+		if anchor ≠ other
+			# pick another marble, draw a line to it (i.e., get slope)
+			slope_a2o = slope(anchor, other)
+			anchor2other = [anchor, other]
+			# if no current slope or slopes match, then on the same line
+			if isnothing(lineslope) || lineslope == slope_a2o
+				if length(line) ≤ 2
+					line = anchor2other
+				else
+					line = vcat(line, other)
+				end
+				# for every candidate (non-same and not currently added)
+				# draw a line from anchor-to-candidate
+				# (bypassing the "other" for now)
+				for candidate in marbles
+					if candidate ∉ [anchor, other]
+						anchor2cand = [anchor, candidate]
+						# if the two lines are parallel (given same anchor),
+						# —> add the 2nd marble to the current longest line
+						slope_a2c = slope(anchor, candidate)
+						if slope_a2o == slope_a2c
+							if length(line) ≤ 2
+								line = [anchor, other, candidate]
 							end
+							marbs = setdiff(marbles, line)
+							# recurse, reducing the size of marbles::Vector and 
+							# anchoring at "other", keeping
+							# —> the [other, candidate] as the "running line"
+							return longest_line_inner(anchor, marbs, slope_a2c, line) 
 						end
 					end
 				end
@@ -126,197 +271,266 @@ function count_intersections(marbles, lineslope=nothing, line=[])
 	return line
 end
 
-# ╔═╡ 46b3d7ea-d437-4375-9623-14d594e3840f
-begin
-	struct State # State definition
-		x::Int
-		y::Int
+# ╔═╡ 4fe8f696-3111-4126-9305-508c6261e845
+function longest_line(marbles)
+	# for every "anchor" marble
+	connected_lines = [longest_line_inner(anchor, marbles) for anchor in marbles]
+	lengths = length.(connected_lines)
+	if isempty(lengths)
+		return []
+	else
+		return connected_lines[argmax(lengths)]
 	end
+end
 
-	@enum Action UP DOWN LEFT RIGHT # Action definition
+# ╔═╡ 29d17eb8-15cc-4745-84f2-e3d049a307fa
+function R(mdp, s, s′) # Reward function
+	if isterminal(mdp, s′)
+		# get terminal reward based on longest line!
+		return length(longest_line(mdp.data.simstate.marbles))
+	else
+		return 0
+	end
+end
 
-	null_state = State(-1,-1)
-	𝒮 = [[State(x,y) for x=1:10, y=1:10]..., null_state] # State−space
-	𝒜 = [UP, DOWN, LEFT, RIGHT] # Action−space
+# ╔═╡ 54c47c82-2c0f-4b31-b54e-fe08654f5569
+function render(mdp, s, steps;
+        values=nothing, show_grid=false, label_rewards=true, show_gradient=false,
+        cmap=ColorScheme([RGB(1, 1, 1), RGB(0.8, 0.8, 0.8), RGB(0.5, 0.5, 0.5)]))
+    gr()
 
-	apply(s,a) = Dict(
-		UP    => State(s.x, s.y+1),
-		DOWN  => State(s.x, s.y-1),
-		LEFT  => State(s.x-1, s.y),
-		RIGHT => State(s.x+1, s.y))[a]
+    s_valid = setdiff(states(mdp), [null_state])
+    visited_states = [step.s for step in steps]
+    U = map(s->something(findfirst(isequal(s), visited_states), -1), s_valid)
+    U = show_gradient ? U : zeros(size(U))
+    xmax, ymax = grid_x, grid_y
+    Uxy = reshape(U, xmax, ymax)
 
+    p = heatmap(Uxy',leg=:none,ratio=:equal,frame=:box,tickor=:out,c=cmap.colors)
+    if show_grid
+        grid_color = RGB(0.95, 0.95, 0.95)
+    else
+        grid_color = :black
+    end
+    plot!(x_foreground_color_border=grid_color, y_foreground_color_border=grid_color)
 
-	function T(mdp, s, a) # Transition function
-		mdp.data.visited[s] = mdp.data.time[1]
-		if mdp.data.time[1] % N == 0
-			push!(mdp.data.marbles, s) # place marble at state s
-		end			
-		mdp.data.time[1] = mdp.data.time[1] + 1
-		Nₐ = length(𝒜)
-		next_states = Vector{State}(undef, Nₐ)
-		probabilities = zeros(Nₐ)
-		visited = mdp.data.visited
-		p_trans = 0.5
-		for (i, a′) in enumerate(𝒜)
-			destination = apply(s, a′)
-			prob = (a′ == a) ? p_trans : (1 - p_trans) / Nₐ
-			next_states[i] = destination
-			not_visited = !haskey(visited, destination)
-			if 1 ≤ destination.x ≤ 10 && 1 ≤ destination.y ≤ 10 && not_visited
-				probabilities[i] += prob
+    Nₛ = length(𝒮)-1
+    xlims!(0.5, xmax+0.5)
+    ylims!(0.5, ymax+0.5)
+    if Nₛ ≤ 100
+        xticks!(1:xmax)
+        yticks!(1:ymax)
+    else
+        xticks!([1, xmax])
+        yticks!([1, ymax])
+    end
+
+    rectangle(w, h, x, y) = Shape(x .+ [0,w,w,0], y .+ [0,0,h,h])
+    if show_grid
+        for x in 1:xmax, y in 1:ymax
+            plot!(rectangle(1, 1, x-0.5, y-0.5), fillalpha=0, linecolor=grid_color)
+        end
+    end
+
+    plot!(map(s->s.x, visited_states), map(s->s.y, visited_states), lw=2, c=:black)
+
+    marbles = last(steps).info
+    line = sort(longest_line(marbles))
+    for (i,node) in enumerate(line[1:end-1])
+        # draw line from marble in line to next marble in line
+        plot!([node.x, line[i+1].x], [node.y, line[i+1].y], style=:dash, c=:gray)
+    end
+
+    for marble in marbles
+        mms = clamp(100/Nₛ*10, 4, 8)
+        color = marble ∈ line ? "crimson" : "black"
+        scatter!([marble.x], [marble.y], ms=mms, c=color, alpha=0.9)
+    end
+
+    if !isnothing(s)
+        ams = clamp(100/Nₛ*12, 5, 10)
+        scatter!([s.x], [s.y], ms=ams, c="white", alpha=0.9)
+    end
+
+    max_steps = length(visited_states)
+    num_marbles = last(steps).r
+    N = mdp.data.simstate.N
+    K = max_steps/N
+	plural = num_marbles == 1 ? "marble" : "marbles"
+    title!("$num_marbles $plural in longest line ($max_steps steps, N=$N, K=$K)")
+    return p
+end
+
+# ╔═╡ b62b36c8-376e-4e50-92c0-d1d285c615e1
+function create_mdp()
+	problem = QuickMDP(GridWorld,
+		states     = 𝒮,
+		actions    = 𝒜,
+		reward     = (s,a=missing,s′=missing) -> R(problem, s, s′),
+		gen        = (s,a,rng) -> generate(problem, s, a, rng),
+		discount   = 1.0,
+		isterminal = s->ismissing(s) ? false : s==State(-1,-1),
+		initialstate = function ()
+			reset!(problem.data.simstate)
+			if start_at_center
+				return Deterministic(State(grid_x÷2, grid_y÷2))
+			else
+				return 𝒮 # random initial state anywhere
 			end
-		end
-		if sum(probabilities) == 0 # no more non-visited states to explore
-			return Deterministic(null_state)
-		else
-			return SparseCat(next_states, probabilities)
-		end
-	end
-
-	function R(mdp, s, s′) # Reward function
-		if isterminal(mdp, s′)
-			# get terminal reward based on longest line!
-			return length(count_intersections(mdp.data.marbles))
-		else
-			return 0
-		end
-	end
-
-	function render(mdp, s, steps;
-			values=nothing, show_grid=true, label_rewards=true,
-			cmap=ColorScheme([RGB(1, 1, 1), RGB(0.5, 0.5, 0.5), RGB(0.2, 0.2, 0.2)])) 
-		gr()
-		s_valid = setdiff(states(mdp), [null_state])
-		visited_states = [step.s for step in steps]
-		U = map(s->something(findfirst(isequal(s), visited_states), -1), s_valid)
-		xmax = ymax = Int(sqrt(length(U)))
-		Uxy = reshape(U, xmax, ymax)
-		p = heatmap(Uxy',leg=:none,ratio=:equal,frame=:box,tickor=:out,c=cmap.colors)
-		xlims!(0.5, xmax+0.5)
-		ylims!(0.5, ymax+0.5)
-		xticks!(1:xmax)
-		yticks!(1:ymax)
-		rectangle(w, h, x, y) = Shape(x .+ [0,w,w,0], y .+ [0,0,h,h])
-		terminal_states = filter(s->reward(mdp, s) != 0, states(mdp))
-		if label_rewards
-			for sT in terminal_states
-				r = reward(mdp, sT)
-				annotate!([(sT.x, sT.y, (r, :white, :c, 10, "Computer Modern"))])
-			end
-		end
-		if show_grid
-			for x in 1:xmax, y in 1:ymax
-				plot!(rectangle(1, 1, x-0.5, y-0.5), fillalpha=0, linecolor=:gray)
-			end
-		end
-		for marble in mdp.data.marbles
-			scatter!([marble.x], [marble.y], ms=10, c="yellow", alpha=0.9)
-		end
-		if !isnothing(s)
-			color = (s in terminal_states) ? "yellow" : "blue"
-			scatter!([s.x], [s.y], ms=8, c=color, alpha=0.9)
-		end
-		max_steps = length(visited_states)
-		K = max_steps/N
-		title!("$(last(steps).r) marbles in longest line ($max_steps steps, K=$K)")
-		return p
-	end
-
-	abstract type GridWorld <: MDP{State, Action} end
+		end,
+		simstate   = SimulationState(N=N),
+		render     = render)
+	return problem
 end
 
 # ╔═╡ ad1f77f6-94af-4f6e-b211-e641af3f3944
-mdp = QuickMDP(GridWorld,
-	states     = 𝒮,
-	actions    = 𝒜,
-	reward     = (s,a=missing,s′=missing) -> R(mdp, s, s′),
-	transition = (s,a) -> T(mdp, s, a),
-	discount   = 1.0,
-	isterminal = s->ismissing(s) ? false : s==State(-1,-1),
-	initialstate = function ()
-		mdp.data.time[1] = 1
-		empty!(mdp.data.visited)
-		empty!(mdp.data.marbles)
-		return 𝒮
-	end,
-	visited    = Dict(),
-	marbles    = [],
-	time       = [1],
-	render     = render)
-
-# ╔═╡ 8f6ba0b0-d1e8-45b7-b3f3-608f62ab600f
-Base.Tuple(s::State) = (s.x, s.y) 
+mdp = create_mdp()
 
 # ╔═╡ 55480fa5-87d7-47f1-8739-43ddd9bd6d41
 md"""
-## Simulations
+# Simulations
 """
 
 # ╔═╡ 32f5a9cd-1c8f-4c7b-8c58-34fb8a95da4a
 policy = RandomPolicy(mdp);
 
-# ╔═╡ c09c5b1d-4c87-41e3-b60b-2ec5028ecb27
+# ╔═╡ 76c61243-063e-48ff-a4a6-40ee63b7748e
+MAX_STEPS = grid_x*grid_y
+
+# ╔═╡ 20ba9009-42e9-43e4-b045-f73fc88be339
 begin
+	Random.seed!(0x8675309)
+	_steps = collect(stepthrough(mdp, policy, "s,a,r,sp,info", max_steps=MAX_STEPS))
+	render(mdp, first(_steps).s, _steps, show_grid=true)
+end
+
+# ╔═╡ 20aef511-44f4-44c0-a2e5-0f1bcdbbde42
+md"""
+## Finding long traces / long connected lines
+"""
+
+# ╔═╡ 8106ec79-0d39-4a58-880b-9139a3578d18
+run_long_trace_search = true
+
+# ╔═╡ 786de387-a39e-4a10-9ffa-a130066b5745
+md"""
+Out search objective is either:
+- `:steps` the longest trace (i.e. maximum walking steps)
+- `:line` the longest line of marbles
+"""
+
+# ╔═╡ c9c02711-cad1-4dc7-b1b0-6cbf5d5b5f73
+function objective(curr_trace, prev_trace, maxtype::Symbol) # :steps or :line
+	if maxtype == :steps # we want to maximize the random walk trace itself
+		return length(curr_trace) > length(prev_trace)
+	elseif maxtype == :line # we want to maximize the num. marbles in a line
+		curr_longest_line = longest_line(last(curr_trace).info)
+		if isempty(prev_trace)
+			prev_longest_line = []
+		else
+			prev_longest_line = longest_line(last(prev_trace).info)
+		end
+		return length(curr_longest_line) > length(prev_longest_line)
+	end
+end
+
+# ╔═╡ 64231bdf-cfc9-404b-abdd-04c1b128875c
+maxtype = :steps
+
+# ╔═╡ 8ef0220c-8d46-4988-8d13-43305a4bc5a3
+if run_long_trace_search
+	longest_trace = []
+	saved_seed = nothing
+	for seed in 100_000:101_000
+		global longest_trace, saved_seed
+		Random.seed!(seed)
+		trace = collect(stepthrough(mdp, policy, "s,a,r,info", max_steps=MAX_STEPS))
+		if objective(trace, longest_trace, maxtype)
+			longest_trace = trace
+			saved_seed = seed
+			@info "Found better seed: $saved_seed"
+		end
+	end
+	@show saved_seed
+	render(mdp, first(longest_trace).s, longest_trace)
+end
+
+# ╔═╡ a2abd2a5-1ca7-46f3-9c10-21c20c931664
+run_long_trace_search && longest_line(last(longest_trace).info)
+
+# ╔═╡ 35a2e9e7-1c26-4fdb-9f01-cb02ded2ccd5
+md"""
+## Some examples
+"""
+
+# ╔═╡ c309c675-8540-412c-948b-ecd7d4df06f9
+run_examples = true
+
+# ╔═╡ c09c5b1d-4c87-41e3-b60b-2ec5028ecb27
+if run_examples
 	Random.seed!(0xBADA55)
-	steps = collect(stepthrough(mdp, policy, "s,a,r", max_steps=100))
-	last(steps).r # number of marbles in longest line
+	steps = collect(stepthrough(mdp, policy, "s,a,r,info", max_steps=MAX_STEPS))
 	render(mdp, first(steps).s, steps)
 end
 
+# ╔═╡ d489f1b2-8621-4954-9442-0b3323a88a47
+run_examples && last(steps).r # number of marbles in longest line
+
 # ╔═╡ 2bea26ac-9c26-4192-bbb1-b44c2c801a42
-begin
-	Random.seed!(0xC0FFEE)
-	steps2 = collect(stepthrough(mdp, policy, "s,a,r", max_steps=100))
+if run_examples
+	Random.seed!(2*0xC0FFEE)
+	steps2 = collect(stepthrough(mdp, policy, "s,a,r,info", max_steps=MAX_STEPS))
 	render(mdp, first(steps2).s, steps2)
 end
 
 # ╔═╡ d3b4ad27-ee31-4699-838d-d7e88010bd3b
-begin
-	Random.seed!(0xB00B00)
-	steps3 = collect(stepthrough(mdp, policy, "s,a,r", max_steps=100))
+if run_examples
+	Random.seed!(0x0FF1CE)
+	steps3 = collect(stepthrough(mdp, policy, "s,a,r,info", max_steps=MAX_STEPS))
+	render(mdp, first(steps3).s, steps3)
 end
-
-# ╔═╡ fc0317c0-ac0f-43e8-900e-77b723625c56
-md"Simulation time step: $(@bind t Slider(1:length(steps3), default=1))"
-
-# ╔═╡ 91aae185-c9c8-4bc4-968f-8ae51bf8fa0e
-render(mdp, steps3[t].s, steps3)
 
 # ╔═╡ 5456e9a3-e9d6-4d07-9b64-13ad035c95a2
 md"""
-## Animation
+# Animation
 """
 
 # ╔═╡ 80daddb3-8aaf-4cb7-97bf-211704f51399
-function create_gif(steps)
-	frames = Frames(MIME("image/png"), fps=2)
+function create_walking_gif(steps)
+	frames = Frames(MIME("image/png"), fps=10)
 	for t in 1:length(steps)
-		frame = render(mdp, steps[t].s, steps)
+		frame = render(mdp, steps[t].s, steps, show_gradient=true)
 		push!(frames, frame)
 	end
 	write("img/xkcd-marbles.gif", frames)
 	LocalResource("./img/xkcd-marbles.gif")
 end
 
+# ╔═╡ 8d24c416-8624-4c8c-93bb-f6b803d3cc25
+create_gif = true
+
 # ╔═╡ 71b85665-4d1f-49c0-8374-b5ba254d6b15
-create_gif(steps3)
+create_gif && create_walking_gif(longest_trace)
 
 # ╔═╡ 9bac2b7e-061b-4f1b-9dc1-3bb0e14089a3
-mdp.data.marbles
+mdp.data.simstate.marbles
 
 # ╔═╡ 85fafe8b-5c46-4d9d-9921-1464d163e065
-mdp.data.visited
+mdp.data.simstate.visited
 
 # ╔═╡ c61e2176-3ecd-4402-9ce2-98cc9c97de52
 md"""
-## Estimating average
+# Estimating average
 """
 
 # ╔═╡ 9ee7a7e4-464a-48c2-a5b7-a18ad00b23b2
 rollout = RolloutSimulator();
 
+# ╔═╡ 821d2f23-fe18-49ae-964c-b6a59bdff354
+run_simulation = true
+
 # ╔═╡ d2f50c70-a070-4b5c-893d-50d539e3dc70
-begin
+if run_simulation
 	using Statistics
 	statistics(X) = (μ=mean(X), σ=std(X), r=X)
 	N_sims = 1000
@@ -325,7 +539,7 @@ begin
 end
 
 # ╔═╡ fbc6418d-a7a5-4820-86cf-8e2463da4cb3
-begin
+if run_simulation
 	using RollingFunctions
 
 	window = 20
@@ -340,14 +554,51 @@ begin
         lw=3, color="black", label="mean ($(stats.μ))")
 	xlabel!("number of simulations")
     ylabel!("mean number of marbles on line")
-    title!("Rolling Mean")
+	title!("rolling mean (N = $(mdp.data.simstate.N), $(grid_x)×$(grid_y) grid)")
     fig
 end
 
 # ╔═╡ cb7d09cc-2199-4728-9a81-9284786b108b
-Markdown.parse("""
+if run_simulation
+	Markdown.parse("""
 \$\$\\mu = $(stats.μ) \\pm $(round(stats.σ, digits=4))\$\$
 """)
+end
+
+# ╔═╡ fe43c340-d6aa-4897-b7f4-27379a00af27
+md"""
+# Sweeping $N$
+The number of steps until we drop a marble $N$.
+"""
+
+# ╔═╡ c70afd12-f57a-4c7f-8f36-3306df552b6c
+run_sweep = true
+
+# ╔═╡ 5cbbff3b-c683-4b53-bfe7-1f480d299876
+if run_sweep
+	N_sweep = 1:100
+	N_means = []
+	N_stds = []
+	mdp_copy = create_mdp() # fresh MDP
+	for N in N_sweep
+		mdp_copy.data.simstate.N = N
+		N_stats = statistics([simulate(rollout, mdp_copy, policy) for _ in 1:N_sims])
+		push!(N_means, N_stats.μ)
+		push!(N_stds, N_stats.σ)
+		@info N, last(N_means), last(N_stds)
+	end
+end
+
+# ╔═╡ d88cc3f4-0ca1-4f4d-afa9-9db33d827e2b
+if run_sweep
+	lb = "mean num. marbles in a line"
+	plot(N_sweep, N_means, color=:black, lw=2, ribbon=N_stds, fillalpha=0.2, label=lb)
+	xlims!(first(N_sweep), last(N_sweep))
+	yticks!(0:maximum(N_means)+3)
+	xlabel!("N")
+	ylabel!("num. marbles in a line")
+	title!("mean number of marbles when sweeping N ($(grid_x)×$(grid_y) grid)")
+end
 
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
@@ -427,9 +678,9 @@ version = "1.16.1+0"
 
 [[ChainRulesCore]]
 deps = ["Compat", "LinearAlgebra", "SparseArrays"]
-git-tree-sha1 = "2f294fae04aa5069a67964a3366e151e09ea7c09"
+git-tree-sha1 = "74e8234fb738c45e2af55fdbcd9bfbe00c2446fa"
 uuid = "d360d2e6-b24c-11e9-a2a3-2a2ae2dbcce4"
-version = "1.9.0"
+version = "1.8.0"
 
 [[ColorSchemes]]
 deps = ["ColorTypes", "Colors", "FixedPointNumbers", "Random"]
@@ -512,9 +763,9 @@ uuid = "8ba89e20-285c-5b6f-9357-94700520ee1b"
 
 [[Distributions]]
 deps = ["ChainRulesCore", "FillArrays", "LinearAlgebra", "PDMats", "Printf", "QuadGK", "Random", "SparseArrays", "SpecialFunctions", "Statistics", "StatsBase", "StatsFuns"]
-git-tree-sha1 = "9809cf6871ca006d5a4669136c09e77ba08bf51a"
+git-tree-sha1 = "e13d3977b559f013b3729a029119162f84e93f5b"
 uuid = "31c24e10-a181-5473-b8eb-7969acd0382f"
-version = "0.25.20"
+version = "0.25.19"
 
 [[DocStringExtensions]]
 deps = ["LibGit2"]
@@ -967,9 +1218,9 @@ version = "0.12.3"
 
 [[Parsers]]
 deps = ["Dates"]
-git-tree-sha1 = "98f59ff3639b3d9485a03a72f3ab35bab9465720"
+git-tree-sha1 = "a8709b968a1ea6abc2dc1967cb1db6ac9a00dfb6"
 uuid = "69de0a69-1ddd-5017-9359-2bf0b02dc9f0"
-version = "2.0.6"
+version = "2.0.5"
 
 [[Pixman_jll]]
 deps = ["Artifacts", "JLLWrappers", "Libdl", "Pkg"]
@@ -1460,31 +1711,78 @@ version = "0.9.1+5"
 # ╠═1e96571e-0f9d-4962-b068-f56e3e75caa9
 # ╟─26b5a345-520d-4b20-881e-0e22da4c8671
 # ╠═0bdfb5c8-fb6d-41fb-b012-e55fb1a7043d
-# ╠═46b3d7ea-d437-4375-9623-14d594e3840f
+# ╟─2b49fff6-2593-4c2a-826e-c20fc255bfce
+# ╟─c809732d-4962-4db3-b90a-786113183198
+# ╠═73e84311-2dff-415a-b0fe-1a197cd6c980
+# ╟─aac4506f-18fc-4829-acd7-c7bd5f8a49a8
+# ╠═1c00e61d-b6b0-44e5-8f78-d7ff235bf21b
+# ╟─cefd2c25-c9a9-494c-b009-9d5c0aa01820
+# ╠═a143845c-b6b9-4317-b25c-6288192b4c4e
+# ╟─77e33f7c-4822-4f21-ad8f-be706bad252c
+# ╠═6d585210-3669-4fa1-80be-2e3be15106d8
+# ╟─7b86d934-0949-4595-95fc-ff957ad91515
+# ╟─b09d6259-da92-4d28-9604-5af35771204f
+# ╠═260ee286-4aa7-4242-985e-e54d99c6ae7d
+# ╟─c02838ee-d854-4eee-b3ee-98cf105383b3
+# ╠═1eebffbe-bd4c-4244-89c5-ee7c26318d51
+# ╟─78cb63eb-b3e1-4490-a8a6-49b508d45fa9
+# ╠═7f3257f5-f932-4638-86d0-4b189db9cebb
+# ╟─3e1caef0-49fb-477f-9ad3-0a3970da9e24
+# ╠═54685504-b94c-46f8-8c66-e4ef99614a3e
+# ╟─b75b9bde-a383-41fb-9ba3-11df9d943488
+# ╠═fccc732e-292f-410a-b969-df34eba2100c
+# ╟─180d8682-d89b-441d-ac53-98f35f2d447c
+# ╠═29d17eb8-15cc-4745-84f2-e3d049a307fa
+# ╟─025838fb-5c7a-44f8-8ac6-179cf1bf45f5
+# ╠═20ba9009-42e9-43e4-b045-f73fc88be339
+# ╠═54c47c82-2c0f-4b31-b54e-fe08654f5569
+# ╠═55502288-1da4-4c4c-a078-1c7daebb19f8
+# ╟─ecc78997-5001-4856-974a-a92728493d17
+# ╠═43464a08-8bb8-4d69-a4c0-5134dced743d
+# ╠═c9fbfec0-28b7-4158-924f-b78930678c2c
+# ╠═b14ef52c-3fa9-453d-acaa-d799e8626670
+# ╠═b62b36c8-376e-4e50-92c0-d1d285c615e1
+# ╠═b596dbf9-0e1b-4059-9cf5-31d9bb94360b
 # ╠═ad1f77f6-94af-4f6e-b211-e641af3f3944
 # ╟─ab1773de-da39-43cc-9512-0b3bd788e64a
 # ╠═8f6ba0b0-d1e8-45b7-b3f3-608f62ab600f
 # ╠═ebf0244d-1962-472a-a1ce-e0d75e293bf9
 # ╟─d3e0c671-2252-4423-8f69-8a54a5214d51
-# ╠═8efcdf04-dfb8-4b7f-92e7-94237aaf3044
+# ╠═4fe8f696-3111-4126-9305-508c6261e845
+# ╠═d6db2bba-98a1-410c-81da-72d2205e1725
 # ╟─55480fa5-87d7-47f1-8739-43ddd9bd6d41
 # ╠═597da832-6120-452e-a88e-1bc922fc31aa
 # ╠═32f5a9cd-1c8f-4c7b-8c58-34fb8a95da4a
+# ╠═76c61243-063e-48ff-a4a6-40ee63b7748e
+# ╟─20aef511-44f4-44c0-a2e5-0f1bcdbbde42
+# ╠═8106ec79-0d39-4a58-880b-9139a3578d18
+# ╟─786de387-a39e-4a10-9ffa-a130066b5745
+# ╠═c9c02711-cad1-4dc7-b1b0-6cbf5d5b5f73
+# ╠═64231bdf-cfc9-404b-abdd-04c1b128875c
+# ╠═8ef0220c-8d46-4988-8d13-43305a4bc5a3
+# ╠═a2abd2a5-1ca7-46f3-9c10-21c20c931664
+# ╟─35a2e9e7-1c26-4fdb-9f01-cb02ded2ccd5
+# ╠═c309c675-8540-412c-948b-ecd7d4df06f9
 # ╠═c09c5b1d-4c87-41e3-b60b-2ec5028ecb27
+# ╠═d489f1b2-8621-4954-9442-0b3323a88a47
 # ╠═2bea26ac-9c26-4192-bbb1-b44c2c801a42
 # ╠═d3b4ad27-ee31-4699-838d-d7e88010bd3b
-# ╠═91aae185-c9c8-4bc4-968f-8ae51bf8fa0e
-# ╟─fc0317c0-ac0f-43e8-900e-77b723625c56
 # ╟─5456e9a3-e9d6-4d07-9b64-13ad035c95a2
 # ╠═d0339619-53f7-420e-b088-cc67958cf17d
 # ╠═80daddb3-8aaf-4cb7-97bf-211704f51399
+# ╠═8d24c416-8624-4c8c-93bb-f6b803d3cc25
 # ╠═71b85665-4d1f-49c0-8374-b5ba254d6b15
 # ╠═9bac2b7e-061b-4f1b-9dc1-3bb0e14089a3
 # ╠═85fafe8b-5c46-4d9d-9921-1464d163e065
 # ╟─c61e2176-3ecd-4402-9ce2-98cc9c97de52
 # ╠═9ee7a7e4-464a-48c2-a5b7-a18ad00b23b2
+# ╠═821d2f23-fe18-49ae-964c-b6a59bdff354
 # ╠═d2f50c70-a070-4b5c-893d-50d539e3dc70
 # ╟─cb7d09cc-2199-4728-9a81-9284786b108b
 # ╠═fbc6418d-a7a5-4820-86cf-8e2463da4cb3
+# ╟─fe43c340-d6aa-4897-b7f4-27379a00af27
+# ╠═c70afd12-f57a-4c7f-8f36-3306df552b6c
+# ╠═5cbbff3b-c683-4b53-bfe7-1f480d299876
+# ╠═d88cc3f4-0ca1-4f4d-afa9-9db33d827e2b
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002
