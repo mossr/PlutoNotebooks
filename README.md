@@ -10,6 +10,7 @@ Random Pluto notebooks in Julia.
 
 [![policy gradient](https://img.shields.io/badge/pluto-policy%20gradient%20estimation-00505c)](https://htmlview.glitch.me/?https://github.com/mossr/PlutoNotebooks/blob/master/html/policy_gradient_estimation.html)
 
+[![pizza](https://img.shields.io/badge/pluto-pizza%20meme%20🍕-00505c)](https://htmlview.glitch.me/?https://github.com/mossr/PlutoNotebooks/blob/master/html/pizza_meme.html)
 
 ## Value Iteration
 
