@@ -12,7 +12,7 @@ Random Pluto notebooks in Julia.
 
 [![pizza](https://img.shields.io/badge/pluto-pizza%20meme%20🍕-00505c)](https://htmlview.glitch.me/?https://github.com/mossr/PlutoNotebooks/blob/master/html/pizza_meme.html)
 
-[![pumpkin](https://img.shields.io/badge/pluto-pumpkin20🎃-00505c)](https://htmlview.glitch.me/?https://github.com/mossr/PlutoNotebooks/blob/master/html/pumpkin.html)
+[![pumpkin](https://img.shields.io/badge/pluto-pumpkin%20🎃-00505c)](https://htmlview.glitch.me/?https://github.com/mossr/PlutoNotebooks/blob/master/html/pumpkin.html)
 
 ## Value Iteration
 
