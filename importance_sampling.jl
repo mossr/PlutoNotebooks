@@ -26,6 +26,9 @@ using PlutoUI
 # ╔═╡ 46bcc8a0-2117-4b85-8a44-fcaa0bba6868
 using ColorSchemes
 
+# ╔═╡ 4147c74d-10bc-48aa-a725-fea135d2e304
+using PDMats, Primes, Random, LinearAlgebra, StatsBase
+
 # ╔═╡ c85db890-8bcb-11ec-3a45-2b0d44ba0abc
 md"""
 # Importance sampling
@@ -54,17 +57,27 @@ md"""
 # Rare event probability: $\mathbb{E}_q\big[\mathbb{I}\{x \ge \gamma\}\big]$
 """
 
-# ╔═╡ 34ffdb0b-eb92-4de2-a0e1-2a38c2b15373
-@bind γ Slider(8:15, default=13, show_value=true) # rare event threshold
+# ╔═╡ 6cfada66-a72c-4eb4-9aa9-408a6d16c0ca
+md"""
+#### Truth
+"""
 
-# ╔═╡ e1a91265-512b-4376-95c6-e29dfee5ad87
-1-cdf(p, γ) # truth: hard to compute probability (risk event estimation)
+# ╔═╡ 34ffdb0b-eb92-4de2-a0e1-2a38c2b15373
+# @bind γ Slider(8:15, default=13, show_value=true) # rare event threshold
+
+# ╔═╡ fbaba7a8-ca9f-445f-baf5-2c02b5029603
+γ = 10.2
 
 # ╔═╡ 47ae008a-bd0a-45d5-b09d-2b18621994a2
 𝕀(b) = b ? 1 : 0 # indicator function
 
 # ╔═╡ fe2a153b-e90f-4826-8058-cfb9a6c2b41b
 g(x) = 𝕀(x ≥ γ) # probability that value is above some threshold γ
+
+# ╔═╡ 10f24b89-0c77-4e6c-b10c-14879582c325
+md"""
+#### Estimate
+"""
 
 # ╔═╡ 6fc930f6-7dd0-4aa0-8ce7-30a5582012e0
 n = 1000 # notice low number of samples
@@ -84,18 +97,22 @@ cmap = map(ℓ->get(gradient, ℓ), w.(X));
 # ╔═╡ 70a2a4bb-f4e6-44cb-845e-a8b33999b514
 begin
 	xmin2, xmax2 = 0, 25
-	theme(:dark)
-	plot(x->pdf(p,x), xmin2, xmax2, c=:white, lw=2, label="p (target/truth)")
+	plot(x->pdf(p,x), xmin2, xmax2, c=:black, lw=2, label="p (target/truth)")
 	scatter!(X, pdf.(q, X), ms=80pdf.(q, X), msw=0, label=false, c=cmap)
-	plot!(x->pdf(q,x), xmin2, xmax2, c=:crimson, lw=2, ls=:dash, label="q (proposal)")
-	plot!([γ, γ], [0, pdf(p,γ)], c=:cyan, lw=3, label=false)
-	scatter!([γ], [pdf(p,γ)], c=:cyan, lw=3, label="𝔼[g(x)]")
+	plot!(x->pdf(q,x), xmin2, xmax2, c=:crimson, lw=2, label="q (proposal)")
+	plot!([γ, γ], [0, pdf(p,γ)], c=:crimson, lw=3, label=false)
+	scatter!([γ], [pdf(p,γ)], c=:crimson, lw=3, label="𝔼[𝕀(x ≥ γ)]")
 	# scatter!(X, pdf.(q, X), c=:white, ms=w.(X), label=false)
 	# scatter!(X, pdf.(q, X), c=:white, ms=20pdf.(p, X), label=false)
 	xlims!(xmin2, xmax2)
 	xlabel!("cost")
 	ylabel!("likelihood")
 end
+
+# ╔═╡ 14dd7ac0-4367-4bfc-9717-ccdb10bda171
+md"""
+###### Importance sampling estimate
+"""
 
 # ╔═╡ 45504a50-9ce2-4457-9493-26127f9f537e
 μ = 1/n * sum(xᵢ->w(xᵢ)*g(xᵢ), X) # estimated mean
@@ -133,19 +150,26 @@ f(x) = 3*pdf(Exponential(2.5), x) # 1 / (1 + exp(-x + 1.9))
 # ╔═╡ 8c112c36-00c8-42d3-bb10-5966fbef81d9
 # samples = filter(y->y ≥ γ, rand(p, 10_000_000))
 
+# ╔═╡ a4876a1a-bbf1-4b7a-83e0-58c4af899c36
+md"""
+#### Truth
+"""
+
+# ╔═╡ 7667881d-5546-452d-a630-1c972fdec485
+f(mean(p)) # true (unknown)
+
 # ╔═╡ fff3e2e1-bee5-4a2e-9570-85f8dfac82ca
 k = 5000
 
 # ╔═╡ b26c338c-4274-42d5-b1af-b5558a584a58
-inputs = rand(p, k) # hard to get
+inputs = rand(p, k); # hard to get
 
 # ╔═╡ 9604d9b2-9aa2-4131-8f42-74ceb74cf0e9
-samples = f.(inputs) # thus, hard to get
+samples = f.(inputs); # thus, hard to get
 
 # ╔═╡ 2fb742a3-6d96-4332-a9aa-62db643f0811
 begin
 	xmin, xmax = 0, 25
-	theme(:default)
 	plot(x->pdf(p,x), xmin, xmax, c=:blue, ls=:dash, label="p (target/truth)")
 	plot!(x->pdf(q,x), xmin, xmax, c=:red, ls=:dash, label="q (proposal)")
 	plot!(f, xmin, xmax, c=:green, lw=3, label="f (e.g., risk values)")
@@ -162,12 +186,9 @@ end
 # ╔═╡ 7cf56c73-5022-45c3-b995-974d122eea16
 mean(samples), var(samples) # hard to get
 
-# ╔═╡ 7667881d-5546-452d-a630-1c972fdec485
-f(mean(p)) # true (unknown)
-
 # ╔═╡ 5c4ab4a0-caab-4670-9edd-c96bb361ffa4
 md"""
----
+###### Importance sampling estimate
 """
 
 # ╔═╡ fc283c41-11ee-4d7f-b2d6-311dff8777bd
@@ -175,9 +196,6 @@ md"""
 
 # ╔═╡ f5ee8b07-0edf-4fd3-8584-cbce68e8a06a
 σ̃² = 1/n * sum(xᵢ->(w(xᵢ)*f(xᵢ) - μ̃)^2, X)
-
-# ╔═╡ dcb13235-7663-416d-b59b-f57f43195604
-(μ̃, σ̃²)
 
 # ╔═╡ 8df63154-bfdb-46ab-8d71-9a67dbf0e453
 md"""
@@ -190,19 +208,793 @@ w.(X)'f.(X) / n # alternate
 # ╔═╡ 96349c9f-1421-4d4c-ae28-3f076da83dc6
 mean(xᵢ->w(xᵢ)*f(xᵢ), X), var(map(xᵢ->w(xᵢ)*f(xᵢ), X)) # alternate
 
+# ╔═╡ d8af9650-927e-4069-a8ce-7d1428aa8653
+md"""
+# Multi-variate case
+"""
+
+# ╔═╡ b895f340-a407-4637-9a4a-0be5f481ce36
+𝐩 = MvNormal([0,0], [1 0; 0 1]);
+
+# ╔═╡ 44bf340a-8f11-4a1d-ac90-9692e4adec4d
+𝐪 = MvNormal([4,4], [3 0; 0 3]);
+
+# ╔═╡ 1d332efa-30c3-4523-9c00-d7c9d9e32f63
+@bind γ₁ Slider(-5:0.5:5, default=3, show_value=true) # rare event threshold
+
+# ╔═╡ aeaff93a-84bf-4b47-90f7-fa16b9ed708c
+@bind γ₂ Slider(-5:0.5:5, default=3, show_value=true) # rare event threshold
+
+# ╔═╡ 5c7352f8-a0d5-4b58-bda9-7c3932601489
+begin
+	xrange = range(-10, stop=10, length=100)
+	yrange = range(-10, stop=10, length=100)
+
+	rectangle(w, h, x, y) = Shape(x .+ [0,w,w,0], y .+ [0,0,h,h])
+	mvkwargs = (ratio=1, c=:viridis, levels=30)
+	contour(xrange, yrange, (x,y)->pdf(𝐩, [x,y]); mvkwargs...)
+	contour!(xrange, yrange, (x,y)->pdf(𝐪, [x,y]); mvkwargs...)
+	scatter!([γ₁], [γ₂], c=:red, ms=3, label=false)
+	plot!([γ₁, xrange[end]], [γ₂, γ₂], c=:red, ms=3, label=false)
+	plot!([γ₁, γ₁], [γ₂, yrange[end]], c=:red, ms=3, label=false)
+	scatter!([γ₁], [γ₂], c=:red, ms=3, label=false)
+	plot!(rectangle(xrange[end]-γ₁,yrange[end]-γ₂,γ₁,γ₂), c=:red, opacity=0.25, label=false)
+
+	xlims!(xrange[1], xrange[end])
+	ylims!(yrange[1], yrange[end])
+end
+
+# ╔═╡ 9facd395-91cd-46f9-86a8-7c7375a9c4a7
+𝛄 = [γ₁,γ₂]
+
+# ╔═╡ 7161fab4-834e-45ec-96c3-cafe2742f96d
+md"""
+#### Truth
+"""
+
+# ╔═╡ 736d48ec-e251-48e5-9b69-59e596caa0ed
+𝐠(𝐱) = 𝕀(all(𝐱 .≥ 𝛄)) # probability that value is above some threshold 𝛄
+
+# ╔═╡ bb34647f-f3c9-44d7-bf91-d32f7cb0d43a
+md"""
+#### Estimate
+"""
+
+# ╔═╡ 4eac94f9-71f1-469a-8fc4-29b5dd39dc59
+nₘᵥ = 1000;
+
+# ╔═╡ 1314c2a6-903c-4441-bd2f-1aac3878a614
+𝐗 = rand(𝐪, nₘᵥ); # sample from proposal distribution q
+
+# ╔═╡ 75ef8e35-a80d-43b1-8363-109417107a61
+md"""
+###### Importance sampling estimate
+"""
+
+# ╔═╡ 5f5789a4-8dfb-4538-b7ed-4f963b5a41f1
+𝐰(𝐱ᵢ) = pdf(𝐩,𝐱ᵢ) / pdf(𝐪,𝐱ᵢ) # likelihood ratio (multi-variate)
+
+# ╔═╡ c3f44bf2-0ac2-42b3-ade4-c9a71b10c3b3
+𝛍 = 1/nₘᵥ * sum(𝐱ᵢ->𝐰(𝐱ᵢ)*𝐠(𝐱ᵢ), eachcol(𝐗)) # estimated mean
+
+# ╔═╡ 46c66d24-4196-4826-9832-10f1ce385867
+𝛔² = 1/nₘᵥ * sum(𝐱ᵢ->(𝐰(𝐱ᵢ)*𝐠(𝐱ᵢ) - 𝛍)^2, eachcol(𝐗)) # estimated variance
+
+# ╔═╡ c8157008-c6d9-4bb5-a440-dc6c02844dfe
+md"""
+## Monte Carlo (multi-variate case)
+"""
+
+# ╔═╡ ca0345ed-734a-4b67-b3c4-885c0679b908
+mcₘᵥ = 𝐠.(eachcol(rand(𝐩, 1_000_000))) # notice high number of samples!
+
+# ╔═╡ 3fe212a8-f689-4df8-bf2c-de46a68ebcaf
+sum(mcₘᵥ)
+
+# ╔═╡ af9572e5-360f-4096-9891-41d3ce3b6019
+mean(mcₘᵥ), var(mcₘᵥ)
+
+# ╔═╡ 0e6e4c0b-44ee-45f0-b5e6-f467285ef9b2
+md"""
+## Helper code (multi-variate CDF):
+- **Taken from [@blackeneth](https://discourse.julialang.org/u/blackeneth/summary), implementation of the multivariate CDF for MvNormal in Julia**: [https://discourse.julialang.org/t/mvn-cdf-have-it-coded-need-help-getting-integrating-into-distributions-jl/38631/15](https://discourse.julialang.org/t/mvn-cdf-have-it-coded-need-help-getting-integrating-into-distributions-jl/38631/15)
+"""
+
+# ╔═╡ 82451f0d-5cee-474d-ae48-adc1bbb1e08b
+"""
+Computes permuted lower Cholesky factor \$c\$ for \$R\$ which may be singular,
+also permuting integration limit vectors a and b.
+
+# Arguments
+- `r::Matrix`          Matrix for which to compute lower Cholesky matrix
+                        when called by mvn_cdf(), this is a covariance matrix
+
+- `a::Vector`          column vector for the lower integration limit
+                        algorithm may permutate this vector to improve integration
+                        accuracy for mvn_cdf()
+
+- `b::Vector`          column vector for the upper integration limit
+                        algorithm may pertmutate this vector to improve integration
+                        accuracy for mvn_cdf()
+# Output
+tuple An a tuple with 3 returned arrays:
+1. lower Cholesky root of r
+2. lower integration limit (perhaps permutated)
+3. upper integration limit (perhaps permutated)
+
+Examples
+r = [1 0.25 0.2; 0.25 1 0.333333333; 0.2 0.333333333 1]
+a = [-1; -4; -2]
+b = [1; 4; 2]
+
+(c, ap, bp) = _chlrdr(r,a,b)
+
+result:
+Lower cholesky root:
+c = [ 1.00 0.0000 0.0000,
+0.20 0.9798 0.0000,
+0.25 0.2892 0.9241 ]
+Permutated upper input vector:
+ap = [-1, -2, -4]
+Permutated lower input vector:
+bp = [1, 2, 4]
+
+Related Functions
+`mvn_cdf` - multivariate Normal CDF function makes use of this function
+"""
+function _chlrdr(Σ,a,b)
+
+    # Rev 1.13
+
+    # define constants
+    # 64 bit machien error 1.0842021724855e-19 ???
+    # 32 bit machine error 2.220446049250313e-16 ???
+    ep = 1e-10 # singularity tolerance
+    if Sys.WORD_SIZE == 64
+        fpsize=Float64
+        ϵ = eps(0.0) # 64-bit machine error
+    else
+        fpsize=Float32
+        ϵ = eps(0.0f0) # 32-bit machine error
+    end
+
+    if !@isdefined sqrt2π
+        sqrt2π = √(2π)
+    end
+
+    # unit normal distribution
+    unitnorm = Normal()
+
+    n = size(Σ,1) # covariance matrix n x n square
+
+    ckk = 0.0
+    dem = 0.0
+    am = 0.0
+    bm = 0.0
+    ik = 0.0
+
+    if eltype(Σ)<:Signed
+        c = copy(float(Σ))
+    else
+        c = copy(Σ)
+    end
+
+    if eltype(a)<:Signed
+        ap = copy(float(a))
+    else
+        ap = copy(a)
+    end
+
+    if eltype(b)<:Signed
+        bp = copy(float(b))
+    else
+        bp = copy(b)
+    end
+
+    d=sqrt.(diag(c))
+    for i in 1:n
+        if d[i] > 0.0
+            c[:,i] /= d[i]
+            c[i,:] /= d[i]
+            ap[i]=ap[i]/d[i]     # ap n x 1 vector
+            bp[i]=bp[i]/d[i]     # bp n x 1 vector
+        end
+    end
+
+    y=zeros(fpsize,n) # n x 1 zero vector to start
+
+    for k in 1:n
+        ik = k
+        ckk = 0.0
+        dem = 1.0
+        s = 0.0
+        #pprinta(c)
+        for i in k:n
+            if c[i,i] > ϵ  # machine error
+                cii = sqrt(max(c[i,i],0))
+
+                if i>1 && k>1
+                    s=(c[i,1:(k-1)].*y[1:(k-1)])[1]
+                end
+
+                ai=(ap[i]-s)/cii
+                bi=(bp[i]-s)/cii
+                de = cdf(unitnorm,bi) - cdf(unitnorm,ai)
+
+                if de <= dem
+                    ckk = cii
+                    dem = de
+                    am = ai
+                    bm = bi
+                    ik = i
+                end
+            end # if c[i,i]> ϵ
+        end # for i=
+        i = n
+
+        if ik>k
+            ap[ik] , ap[k] = ap[k] , ap[ik]
+            bp[ik] , bp[k] = bp[k] , bp[ik]
+
+            c[ik,ik] = c[k,k]
+
+            if k > 1
+                c[ik,1:(k-1)] , c[k,1:(k-1)] = c[k,1:(k-1)] , c[ik,1:(k-1)]
+            end
+
+            if ik<n
+                c[(ik+1):n,ik] , c[(ik+1):n,k] = c[(ik+1):n,k] , c[(ik+1):n,ik]
+            end
+
+            if k<=(n-1) && ik<=n
+                c[(k+1):(ik-1),k] , c[ik,(k+1):(ik-1)] = transpose(c[ik,(k+1):(ik-1)]) , transpose(c[(k+1):(ik-1),k])
+            end
+        end # if ik>k
+
+        if ckk > k*ep
+            c[k,k]=ckk
+            if k < n
+                c[k:k,(k+1):n] .= 0.0
+            end
+
+            for i in (k+1):n
+                c[i,k] /= ckk
+                c[i:i,(k+1):i] -= c[i,k]*transpose(c[(k+1):i,k])
+            end
+
+            if abs(dem)>ep
+                y[k] = (exp(-am^2/2)-exp(-bm^2/2))/(sqrt2π*dem)
+            else
+                if am<-10
+                    y[k] = bm
+                elseif bm>10
+                    y[k]=am
+                else
+                    y[k]=(am+bm)/2
+                end
+            end # if abs
+        else
+            c[k:n,k] .== 0.0
+            y[k] = 0.0
+        end # if ckk>ep*k
+    end # for k=
+
+    return (c, ap, bp)
+end # function _chlrdr
+
+# ╔═╡ 50109416-6bae-4b6f-80f8-d2a8a54810f5
+"""
+`qsimvnv(Σ,a,b;m=iterations)`
+
+Computes the Multivariate Normal probability integral using a quasi-random rule
+with m points for positive definite covariance matrix Σ, mean [0,…], with lower
+integration limit vector a and upper integration limit vector b.
+
+\$\\Phi_k(\\mathbf{a},\\mathbf{b},\\mathbf{\\Sigma} ) = \\frac{1}{\\sqrt{\\left | \\mathbf{\\Sigma}  \\right |{(2\\pi )^k}}}\\int_{a_1}^{b_1}\\int_{a_2}^{b_2}\\begin{align*}
+ &...\\end{align*} \\int_{a_k}^{b_k}e^{^{-\\frac{1}{2}}\\mathbf{x}^t{\\mathbf{\\Sigma }}^{-1}\\boldsymbol{\\mathbf{x}}}dx_k...dx_1\$
+
+Probability `p` is output with error estimate `e`.
+
+# Arguments
+- `Σ::AbstractArray`: positive-definite covariance matrix of MVN distribution
+- `a::Vector`: lower integration limit column vector
+- `b::Vector`: upper integration limit column vector
+- `m::Int64`: number of integration points (default 1000*dimension)
+
+# Example
+```julia
+julia> r = [4 3 2 1;3 5 -1 1;2 -1 4 2;1 1 2 5]
+julia> a = [-Inf; -Inf; -Inf; -Inf]
+julia> b = [1; 2; 3; 4 ]
+julia> m = 5000
+julia> (p,e) = qsimvnv(r,a,b;m=m)
+(0.605219554009911, 0.0015718064928452481)
+```
+Results will vary slightly from run-to-run due to the quasi-Monte Carlo
+algorithm.
+
+Non-central MVN distributions (with non-zero mean) can use this function by adjusting
+the integration limits. Subtract the mean vector, μ, from each
+integration vector.
+
+# Example
+```julia
+julia> #non-central MVN
+julia> Σ=[4 2;2 3]
+julia> μ = [1;2]
+julia> a=[-Inf; -Inf]
+julia> b=[2; 2]
+julia> (p,e) = qsimvnv(Σ,a-μ,b-μ)
+(0.4306346895870772, 0.00015776288569406053)
+```
+"""
+function qsimvnv(Σ,a,b;m=nothing)
+    #= rev 1.13
+
+    This function uses an algorithm given in the paper
+    "Numerical Computation of Multivariate Normal Probabilities", in
+     J. of Computational and Graphical Stat., 1(1992), pp. 141-149, by
+    Alan Genz, WSU Math, PO Box 643113, Pullman, WA 99164-3113
+    Email : alangenz@wsu.edu
+    The primary references for the numerical integration are
+    "On a Number-Theoretical Integration Method"
+    H. Niederreiter, Aequationes Mathematicae, 8(1972), pp. 304-11, and
+    "Randomization of Number Theoretic Methods for Multiple Integration"
+    R. Cranley and T.N.L. Patterson, SIAM J Numer Anal, 13(1976), pp. 904-14.
+
+    Re-coded in Julia from the MATLAB function qsimvnv(m,r,a,b)
+
+    Alan Genz is the author the MATLAB qsimvnv() function.
+    Alan Genz software website: http://archive.is/jdeRh
+    Source code to MATLAB qsimvnv() function: http://archive.is/h5L37
+    % QSIMVNV(m,r,a,b) and _chlrdr(r,a,b)
+    %
+    % Copyright (C) 2013, Alan Genz,  All rights reserved.
+    %
+    % Redistribution and use in source and binary forms, with or without
+    % modification, are permitted provided the following conditions are met:
+    %   1. Redistributions of source code must retain the above copyright
+    %      notice, this list of conditions and the following disclaimer.
+    %   2. Redistributions in binary form must reproduce the above copyright
+    %      notice, this list of conditions and the following disclaimer in
+    %      the documentation and/or other materials provided with the
+    %      distribution.
+    %   3. The contributor name(s) may not be used to endorse or promote
+    %      products derived from this software without specific prior
+    %      written permission.
+    % THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+    % "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+    % LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS
+    % FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE
+    % COPYRIGHT OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT,
+    % INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING,
+    % BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS
+    % OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+    % ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR
+    % TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF USE
+    % OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+    %
+
+    Julia dependencies
+    Distributions
+    PDMats
+    Primes
+    Random
+    LinearAlgebra
+
+    =#
+
+    if isnothing(m)
+        m = 1000*size(Σ,1)  # default is 1000 * dimension
+    end
+
+    # check for proper dimensions
+    n=size(Σ,1)
+    nc=size(Σ,2)    # assume square Cov matrix nxn
+    # check dimension > 1
+    n >= 2   || throw(ErrorException("dimension of Σ must be 2 or greater. Σ dimension: $(size(Σ))"))
+    n == nc  || throw(DimensionMismatch("Σ matrix must be square. Σ dimension: $(size(Σ))"))
+
+    # check dimensions of lower vector, upper vector, and cov matrix match
+    (n == size(a,1) == size(b,1)) || throw(DimensionMismatch("iconsistent argument dimensions. Sizes: Σ $(size(Σ))  a $(size(a))  b $(size(b))"))
+
+    # check that a and b are column vectors; if row vectors, fix it
+    if size(a,1) < size(a,2)
+        a = transpose(a)
+    end
+    if size(b,1) < size(b,2)
+        b = transpose(b)
+    end
+
+    # check that lower integration limit a < upper integration limit b for all elements
+    all(a .<= b) || throw(ArgumentError("lower integration limit a must be <= upper integration limit b"))
+
+    # check that Σ is positive definate; if not, print warning
+    isposdef(Σ) || @warn "covariance matrix Σ fails positive definite check"
+
+    # check if Σ, a, or b contains NaNs
+    if any(isnan.(Σ)) || any(isnan.(a)) || any(isnan.(b))
+        p = NaN
+        e = NaN
+        return (p,e)
+    end
+
+    # check if a==b
+    if a == b
+        p = 0.0
+        e = 0.0
+        return (p,e)
+    end
+
+    # check if a = -Inf & b = +Inf
+    if all(a .== -Inf) && all(b .== Inf)
+        p = 1.0
+        e = 0.0
+        return (p,e)
+    end
+
+    # check input Σ, a, b are floats; otherwise, convert them
+    if eltype(Σ)<:Signed
+        Σ = float(Σ)
+    end
+
+    if eltype(a)<:Signed
+        a = float(a)
+    end
+
+    if eltype(b)<:Signed
+        b = float(b)
+    end
+
+    ##################################################################
+    #
+    # Special cases: positive Orthant probabilities for 2- and
+    # 3-dimesional Σ have exact solutions. Integration range [0,∞]
+    #
+    ##################################################################
+
+    if all(a .== zero(eltype(a))) && all(b .== Inf) && n <= 3
+        Σstd = sqrt.(diag(Σ))
+        Rcorr = cov2cor(Σ,Σstd)
+
+        if n == 2
+            p = 1/4 + asin(Rcorr[1,2])/(2π)
+            e = eps()
+        elseif n == 3
+            p = 1/8 + (asin(Rcorr[1,2]) + asin(Rcorr[2,3]) + asin(Rcorr[1,3]))/(4π)
+            e = eps()
+        end
+
+        return (p,e)
+
+    end
+
+    ##################################################################
+    #
+    # get lower cholesky matrix and (potentially) re-ordered integration vectors
+    #
+    ##################################################################
+
+    (ch,as,bs)=_chlrdr(Σ,a,b) # ch =lower cholesky; as=lower vec; bs=upper vec
+
+    ##################################################################
+    #
+    # quasi-Monte Carlo integration of MVN integral
+    #
+    ##################################################################
+
+    ### setup initial values
+    ai=as[1]
+    bi=bs[1]
+    ct=ch[1,1]
+
+    unitnorm = Normal() # unit normal distribution
+    rng=RandomDevice()
+
+    # if ai is -infinity, explicity set c=0
+    # implicitly, the algorith classifies anythign > 9 std. deviations as infinity
+    if ai > -9*ct
+        if ai < 9*ct
+            c1 = cdf.(unitnorm,ai/ct)
+        else
+            c1 = 1.0
+        end
+    else
+        c1 = 0.0
+    end
+
+    # if bi is +infinity, explicity set d=0
+    if bi > -9*ct
+        if bi < 9*ct
+            d1 = cdf(unitnorm,bi/ct)
+        else
+            d1 = 1.0
+        end
+    else
+        d1 = 0.0
+    end
+
+    #n=size(Σ,1)    # assume square Cov matrix nxn
+    cxi=c1          # initial cxi; genz uses ci but it conflicts with Lin. Alg. ci variable
+    dci=d1-cxi      # initial dcxi
+    p=0.0           # probablity = 0
+    e=0.0           # error = 0
+
+    # Richtmyer generators
+    ps=sqrt.(primes(Int(floor(5*n*log(n+1)/4)))) # Richtmyer generators
+    q=ps[1:n-1,1]
+    ns=12
+    nv=Int(max(floor(m/ns),1))
+
+    Jnv    = ones(1,nv)
+    cfill  = transpose(fill(cxi,nv))    # evaulate at nv quasirandom points row vec
+    dpfill = transpose(fill(dci,nv))
+    y      = zeros(n-1,nv)              # n-1 rows, nv columns, preset to zero
+
+    #=Randomization loop for ns samples
+     j is the number of samples to integrate over,
+         but each with a vector nv in length
+     i is the number of dimensions, or integrals to comptue =#
+
+    for j in 1:ns                   # loop for ns samples
+        c  = copy(cfill)
+        dc = copy(dpfill)
+        pv = copy(dpfill)
+            for i in 2:n
+                x=transpose(abs.(2.0 .* mod.((1:nv) .* q[i-1] .+ rand(rng),1) .- 1))     # periodizing transformation
+                # note: the rand() is not broadcast -- it's a single random uniform value added to all elements
+                y[i-1,:] = quantile.(unitnorm,c .+ x.*dc)
+                s = transpose(ch[i,1:i-1]) * y[1:i-1,:]
+                ct=ch[i,i]                                      # ch is cholesky matrix
+                ai=as[i] .- s
+                bi=bs[i] .- s
+                c=copy(Jnv)                                     # preset to 1 (>9 sd, +∞)
+                d=copy(Jnv)                                     # preset to 1 (>9 sd, +∞)
+
+                c[findall(x -> isless(x,-9*ct),ai)] .= 0.0      # If < -9 sd (-∞), set to zero
+                d[findall(x -> isless(x,-9*ct),bi)] .= 0.0      # if < -9 sd (-∞), set to zero
+                tstl = findall(x -> isless(abs(x),9*ct),ai)     # find cols inbetween -9 and +9 sd (-∞ to +∞)
+                c[tstl] .= cdf.(unitnorm,ai[tstl]/ct)           # for those, compute Normal CDF
+                tstl = (findall(x -> isless(abs(x),9*ct),bi))   # find cols inbetween -9 and +9 sd (-∞ to +∞)
+                d[tstl] .= cdf.(unitnorm,bi[tstl]/ct)
+                @. dc=d-c
+                @. pv=pv * dc
+            end # for i=
+        d=(mean(pv)-p)/j
+        p += d
+        e=(j-2)*e/j+d^2
+    end # for j=
+
+    e=3*sqrt(e)     # error estimate is 3 times standard error with ns samples
+
+    return (p,e)    # return probability value and error estimate
+end # function qsimvnv
+
+# ╔═╡ a5f0e937-0b5a-4985-b4a3-6cc9c1dd424b
+function Distributions.cdf(N::MvNormal, 𝐱::Vector;
+		     a=fill(0, length(N.μ)), b=fill(Inf, length(N.μ)), m=nothing)
+	return 1 - first(qsimvnv(N.Σ, a-N.μ+𝐱, b-N.μ+𝐱; m=m))
+end	
+
+# ╔═╡ e1a91265-512b-4376-95c6-e29dfee5ad87
+1 - cdf(p, γ) # truth: hard to compute probability (risk event estimation)
+
+# ╔═╡ b58eb4ed-510d-419b-b4e1-19f271d88fa7
+1 - cdf(𝐩, 𝛄) # truth: hard to compute probability (risk event estimation)
+
+# ╔═╡ ff145501-5313-4ab6-865b-c5d24dcbfa70
+function testmvn(;m=nothing)
+    #Typical Usage/Example Code
+    #Example multivariate Normal CDF for various vectors
+    println()
+
+    # from MATLAB documentation
+    r = [4 3 2 1;3 5 -1 1;2 -1 4 2;1 1 2 5]
+    a = [-Inf; -Inf; -Inf; -Inf] # -inf for each
+    b = [1; 2; 3; 4 ]
+    m = 5000
+    #m=4000 # rule of thumb: 1000*(number of variables)
+    (myp,mye)=qsimvnv(r,a,b;m=m)
+    println("Answer should about 0.6044 to 0.6062")
+    println(myp)
+    println("The Error should be <= 0.001 - 0.0014");
+    println(mye)
+
+    r=[1 0.6 0.333333;
+       0.6 1 0.733333;
+       0.333333 0.733333 1]
+    r  = [  1   3/5   1/3;
+          3/5    1    11/15;
+          1/3  11/15    1]
+    a=[-Inf;-Inf;-Inf]
+    b=[1;4;2]
+    #m=3000;
+    (myp,mye)=qsimvnv(r,a,b;m=4000)
+    println()
+    println("Answer shoudl be about 0.82798")
+    # answer from Genz paper 0.827984897456834
+    println(myp)
+    println("The Error should be <= 2.5-05")
+    println(mye)
+
+    r=[1 0.25 0.2; 0.25 1 0.333333333; 0.2 0.333333333 1]
+    a=[-1;-4;-2]
+    b=[1;4;2]
+    #m=3000;
+    (myp,mye)=qsimvnv(r,a,b;m=4000);
+    println()
+    println("Answer should be about 0.6537")
+    println(myp)
+    println("The Error should be <= 2.5-05")
+    println(mye)
+
+    # Genz problem 1.5 p. 4-5  & p. 63
+    # correct answer F(a,b) = 0.82798
+    r = [1/3 3/5 1/3;
+         3/5 1.0 11/15;
+         1/3 11/15 1.0]
+    a = [-Inf; -Inf; -Inf]
+    b = [1; 4; 2]
+    (myp,mye)=qsimvnv(r,a,b;m=4000)
+    println()
+    #println("Answer shoudl be about 0.82798")
+    println("Answer should be 0.9432")
+    println(myp)
+    println("The error should be < 6e-05")
+    println(mye)
+
+    # Genz page 63 uses a different r Matrix
+    r = [1 0 0;
+        3/5 1 0;
+        1/3 11/15 1]
+	a = [-Inf; -Inf; -Inf]
+	b = [1; 4; 2]
+    (myp,mye)=qsimvnv(r,a,b;m=4000)
+    println()
+    println("Answer shoudl be about 0.82798")
+    println(myp)
+    println("The error should be < 6e-05")
+    println(mye)
+    # mystery solved - he used the wrong sigma Matrix
+    # when computing the results on page 6
+
+
+    # singular cov Example
+    r = [1 1 1; 1 1 1; 1 1 1]
+    a = [-Inf, -Inf, -Inf]
+    b = [1, 1, 1]
+    (myp,mye)=qsimvnv(r,a,b)
+    println()
+    println("Answer should be 0.841344746068543")
+    println(myp)
+    println("The error should be 0.0")
+    println(mye)
+    println("Cov matrix is singular")
+    println("Problem reduces to a univariate problem with")
+    println("p = cdf.(Normal(),1) = ",cdf.(Normal(),1))
+
+    # 5 dimensional Example
+    #c = LinearAlgebra.tri(5)
+    r = [1 1 1 1 1;
+         1 2 2 2 2;
+         1 2 3 3 3;
+         1 2 3 4 4;
+         1 2 3 4 5]
+    a = [-1,-2,-3,-4,-5]
+    b = [2,3,4,5,6]
+    (myp,mye)=qsimvnv(r,a,b)
+    println()
+    println("Answer should be ~ 0.7613")
+    # genz gives 0.4741284  p. 5 of book
+    # Julia, MATLAB, and R all give ~0.7613 !
+    println(myp)
+    println("The error should be < 0.001")
+    println(mye)
+
+    # genz reversed the integration limits when computing
+    # see p. 63
+    a = sort!(a)
+    b = 1 .- a
+    (myp,mye)=qsimvnv(r,a,b)
+    println()
+    println("Answer should be ~ 0.4741284")
+    # genz gives 0.4741284  p. 5 of book
+    # now matches with reversed integration limits
+    println(myp)
+    println("The error should be < 0.001")
+    println(mye)
+
+    # positive orthant of above
+    a = [0,0,0,0,0]
+    (myp,mye)=qsimvnv(r,a,b)
+    println()
+    println("Answer should be ~  0.11353418")
+    # genz gives 0.11353418   p. 6 of book
+    println(myp)
+    println("The error should be < 0.001")
+    println(mye)
+
+    # now with a = -inf
+    a = [-Inf,-Inf,-Inf,-Inf,-Inf]
+    (myp,mye)=qsimvnv(r,a,b)
+    println()
+    println("Answer should be ~ 0.81031455")
+    # genz gives 0.81031455  p. 6 of book
+    println(myp)
+    println("The error should be < 0.001")
+    println(mye)
+
+    # eight dimensional Example
+    r = [1 1 1 1 1 1 1 1;
+         1 2 2 2 2 2 2 2;
+         1 2 3 3 3 3 3 3;
+         1 2 3 4 4 4 4 4;
+         1 2 3 4 5 5 5 5;
+         1 2 3 4 5 6 6 6;
+         1 2 3 4 5 6 7 7;
+         1 2 3 4 5 6 7 8]
+    a = -1*[1,2,3,4,5,6,7,8]
+    b = [2,3,4,5,6,7,8,9]
+    (myp,mye)=qsimvnv(r,a,b)
+    println()
+    println("Answer should be ~ 0.7594")
+    # genz gives 0.32395   p. 6 of book
+    # MATLAB gives 0.7594362
+    println(myp)
+    println("The error should be < 0.001")
+    println(mye)
+
+
+    # eight dim orthant
+    a=[0,0,0,0,0,0,0,0]
+    b=[Inf,Inf,Inf,Inf,Inf,Inf,Inf,Inf]
+    (myp,mye)=qsimvnv(r,a,b)
+    println()
+    println("Answer should be ~ 0.196396")
+    # genz gives 0.076586  p. 6 of book
+    # MATLB gives 0.196383
+    println(myp)
+    println("The error should be < 0.001")
+    println(mye)
+
+    # eight dim with a = -inf
+    a=-Inf*[1,1,1,1,1,1,1,1]
+    b = [2,3,4,5,6,7,8,9]
+    #b = [0,0,0,0,0,0,0,0]
+    (myp,mye)=qsimvnv(r,a,b)
+    println()
+    println("Answer should be ~ 0.9587")
+    # genz gives 0.69675    p. 6 of book
+    # MATLAB gives 0.9587
+    println(myp)
+    println("The error should be < 0.001")
+    println(mye)
+end # testmvn
+
+# ╔═╡ 0d7c5de8-bfda-4938-8a70-9955505e52b9
+testmvn()
+
 # ╔═╡ 00000000-0000-0000-0000-000000000001
 PLUTO_PROJECT_TOML_CONTENTS = """
 [deps]
 ColorSchemes = "35d6a980-a343-548e-a6ea-1d62b119f2f4"
 Distributions = "31c24e10-a181-5473-b8eb-7969acd0382f"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+PDMats = "90014a1f-27ba-587c-ab20-58faa44d9150"
 Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 PlutoUI = "7f904dfe-b85e-4ff6-b463-dae2292396a8"
+Primes = "27ebfcd6-29c5-5fa9-bf4b-fb8fc14df3ae"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 
 [compat]
 ColorSchemes = "~3.17.1"
 Distributions = "~0.25.48"
+PDMats = "~0.11.5"
 Plots = "~1.25.9"
 PlutoUI = "~0.7.34"
+Primes = "~0.5.1"
+StatsBase = "~0.33.15"
 """
 
 # ╔═╡ 00000000-0000-0000-0000-000000000002
@@ -769,6 +1561,11 @@ git-tree-sha1 = "2cf929d64681236a2e074ffafb8d568733d2e6af"
 uuid = "21216c6a-2e73-6563-6e65-726566657250"
 version = "1.2.3"
 
+[[deps.Primes]]
+git-tree-sha1 = "984a3ee07d47d401e0b823b7d30546792439070a"
+uuid = "27ebfcd6-29c5-5fa9-bf4b-fb8fc14df3ae"
+version = "0.5.1"
+
 [[deps.Printf]]
 deps = ["Unicode"]
 uuid = "de0858da-6303-5e67-8744-51eddeeeb8d7"
@@ -891,9 +1688,9 @@ version = "1.2.0"
 
 [[deps.StatsBase]]
 deps = ["DataAPI", "DataStructures", "LinearAlgebra", "LogExpFunctions", "Missings", "Printf", "Random", "SortingAlgorithms", "SparseArrays", "Statistics", "StatsAPI"]
-git-tree-sha1 = "51383f2d367eb3b444c961d485c565e4c0cf4ba0"
+git-tree-sha1 = "118e8411d506d583fbbcf4f3a0e3c5a9e83370b8"
 uuid = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
-version = "0.33.14"
+version = "0.33.15"
 
 [[deps.StatsFuns]]
 deps = ["ChainRulesCore", "InverseFunctions", "IrrationalConstants", "LogExpFunctions", "Reexport", "Rmath", "SpecialFunctions"]
@@ -1187,12 +1984,16 @@ version = "0.9.1+5"
 # ╠═4212859a-8859-4b0a-9223-ccb1afc8cfcd
 # ╠═873ef3ba-c803-46a6-b864-8b88903de7ec
 # ╠═70a2a4bb-f4e6-44cb-845e-a8b33999b514
+# ╟─6cfada66-a72c-4eb4-9aa9-408a6d16c0ca
 # ╠═e1a91265-512b-4376-95c6-e29dfee5ad87
 # ╠═34ffdb0b-eb92-4de2-a0e1-2a38c2b15373
+# ╠═fbaba7a8-ca9f-445f-baf5-2c02b5029603
 # ╠═47ae008a-bd0a-45d5-b09d-2b18621994a2
 # ╠═fe2a153b-e90f-4826-8058-cfb9a6c2b41b
+# ╟─10f24b89-0c77-4e6c-b10c-14879582c325
 # ╠═6fc930f6-7dd0-4aa0-8ce7-30a5582012e0
 # ╠═32bbfa28-1a47-4b1b-b2c5-bcc0d14d2f6e
+# ╟─14dd7ac0-4367-4bfc-9717-ccdb10bda171
 # ╠═45504a50-9ce2-4457-9493-26127f9f537e
 # ╠═363154fb-f4e7-4a4a-a878-5e458b738cc0
 # ╟─ccdf4496-bee6-4701-940b-e4560149fabe
@@ -1204,17 +2005,45 @@ version = "0.9.1+5"
 # ╠═2fb742a3-6d96-4332-a9aa-62db643f0811
 # ╠═add76ee3-2e70-4a55-84c1-2cb20bc5e30c
 # ╠═8c112c36-00c8-42d3-bb10-5966fbef81d9
+# ╟─a4876a1a-bbf1-4b7a-83e0-58c4af899c36
+# ╠═7667881d-5546-452d-a630-1c972fdec485
 # ╠═fff3e2e1-bee5-4a2e-9570-85f8dfac82ca
 # ╠═b26c338c-4274-42d5-b1af-b5558a584a58
 # ╠═9604d9b2-9aa2-4131-8f42-74ceb74cf0e9
 # ╠═7cf56c73-5022-45c3-b995-974d122eea16
-# ╠═7667881d-5546-452d-a630-1c972fdec485
 # ╟─5c4ab4a0-caab-4670-9edd-c96bb361ffa4
-# ╠═dcb13235-7663-416d-b59b-f57f43195604
 # ╠═fc283c41-11ee-4d7f-b2d6-311dff8777bd
 # ╠═f5ee8b07-0edf-4fd3-8584-cbce68e8a06a
 # ╟─8df63154-bfdb-46ab-8d71-9a67dbf0e453
 # ╠═841ec98d-7e80-4cfc-a92e-8cd700235390
 # ╠═96349c9f-1421-4d4c-ae28-3f076da83dc6
+# ╟─d8af9650-927e-4069-a8ce-7d1428aa8653
+# ╠═b895f340-a407-4637-9a4a-0be5f481ce36
+# ╠═44bf340a-8f11-4a1d-ac90-9692e4adec4d
+# ╠═5c7352f8-a0d5-4b58-bda9-7c3932601489
+# ╠═1d332efa-30c3-4523-9c00-d7c9d9e32f63
+# ╠═aeaff93a-84bf-4b47-90f7-fa16b9ed708c
+# ╠═9facd395-91cd-46f9-86a8-7c7375a9c4a7
+# ╟─7161fab4-834e-45ec-96c3-cafe2742f96d
+# ╠═b58eb4ed-510d-419b-b4e1-19f271d88fa7
+# ╠═736d48ec-e251-48e5-9b69-59e596caa0ed
+# ╟─bb34647f-f3c9-44d7-bf91-d32f7cb0d43a
+# ╠═4eac94f9-71f1-469a-8fc4-29b5dd39dc59
+# ╠═1314c2a6-903c-4441-bd2f-1aac3878a614
+# ╟─75ef8e35-a80d-43b1-8363-109417107a61
+# ╠═c3f44bf2-0ac2-42b3-ade4-c9a71b10c3b3
+# ╠═46c66d24-4196-4826-9832-10f1ce385867
+# ╠═5f5789a4-8dfb-4538-b7ed-4f963b5a41f1
+# ╟─c8157008-c6d9-4bb5-a440-dc6c02844dfe
+# ╠═ca0345ed-734a-4b67-b3c4-885c0679b908
+# ╠═3fe212a8-f689-4df8-bf2c-de46a68ebcaf
+# ╠═af9572e5-360f-4096-9891-41d3ce3b6019
+# ╟─0e6e4c0b-44ee-45f0-b5e6-f467285ef9b2
+# ╠═4147c74d-10bc-48aa-a725-fea135d2e304
+# ╠═a5f0e937-0b5a-4985-b4a3-6cc9c1dd424b
+# ╟─50109416-6bae-4b6f-80f8-d2a8a54810f5
+# ╟─82451f0d-5cee-474d-ae48-adc1bbb1e08b
+# ╟─ff145501-5313-4ab6-865b-c5d24dcbfa70
+# ╠═0d7c5de8-bfda-4938-8a70-9955505e52b9
 # ╟─00000000-0000-0000-0000-000000000001
 # ╟─00000000-0000-0000-0000-000000000002

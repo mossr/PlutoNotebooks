@@ -14,7 +14,14 @@ Random Pluto notebooks in Julia.
 
 [![pumpkin](https://img.shields.io/badge/pluto-pumpkin%20🎃-00505c)](https://htmlview.glitch.me/?https://github.com/mossr/PlutoNotebooks/blob/master/html/pumpkin.html)
 
-## Value Iteration
+## Importance sampling
+
+[![Importance sampling](https://img.shields.io/badge/pluto-importance%20sampling-00505c)](https://htmlview.glitch.me/?https://github.com/mossr/PlutoNotebooks/blob/master/html/importance_sampling.html)
+Univariate | Multivariate
+:---------------:|:----:
+<a href="https://htmlview.glitch.me/?https://github.com/mossr/PlutoNotebooks/blob/master/html/importance_sampling.html"><img src="./img/importance_sampling_univariate.svg"></a> | <a href="https://htmlview.glitch.me/?https://github.com/mossr/PlutoNotebooks/blob/master/html/importance_sampling.html"><img src="./img/importance_sampling_multivariate.svg"></a>
+
+## Value iteration
 
 [![Value iteration](https://img.shields.io/badge/pluto-value%20iteration-00505c)](https://htmlview.glitch.me/?https://github.com/mossr/PlutoNotebooks/blob/master/html/value_iteration.html)
 <p align="center">
