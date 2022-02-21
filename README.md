@@ -14,6 +14,13 @@ Random Pluto notebooks in Julia.
 
 [![pumpkin](https://img.shields.io/badge/pluto-pumpkin%20🎃-00505c)](https://htmlview.glitch.me/?https://github.com/mossr/PlutoNotebooks/blob/master/html/pumpkin.html)
 
+## Gaussian processes
+
+[![Gaussian processes](https://img.shields.io/badge/pluto-gaussian%20processes-00505c)](https://htmlview.glitch.me/?https://github.com/mossr/PlutoNotebooks/blob/master/html/gaussian_processes.html)
+<p align="center">
+  <a href="https://htmlview.glitch.me/?https://github.com/mossr/PlutoNotebooks/blob/master/html/gaussian_processes.html"><img src="./img/gaussian_processes.svg"></a>
+</p>
+
 ## Importance sampling
 
 [![Importance sampling](https://img.shields.io/badge/pluto-importance%20sampling-00505c)](https://htmlview.glitch.me/?https://github.com/mossr/PlutoNotebooks/blob/master/html/importance_sampling.html)
