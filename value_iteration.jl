@@ -363,6 +363,11 @@ md"""
 $$\pi^*(s) = \operatorname*{argmax}_{a \in \mathcal{A}}\left(R(s,a) + \gamma\sum_{s^\prime \in \mathcal{S}} T(s^\prime \mid s, a)U^*(s^\prime) \right)$$
 """
 
+# ╔═╡ 0fd1e32b-e5dd-4f4d-b626-f0f528247b94
+md"""
+# Package Management
+"""
+
 # ╔═╡ ad92ca29-7738-49bc-9c64-1570b7b97846
 md"""
 ## References
@@ -376,7 +381,6 @@ TableOfContents(title="Value Iteration Algorithm")
 # ╔═╡ Cell order:
 # ╟─fa74acb0-1c29-11ec-0f1b-fd1757a25278
 # ╟─9ef949e0-caf6-47e5-88ca-ea2d75f79443
-# ╟─71860323-7387-4f43-a7fe-b323b0a94c41
 # ╟─99914226-eb68-4cf9-a688-2b8618587461
 # ╠═863b9fc0-3711-4729-b730-ae184ebba0b5
 # ╠═9654f2df-5aef-4ccc-8192-10b6f5c5f829
@@ -409,5 +413,7 @@ TableOfContents(title="Value Iteration Algorithm")
 # ╟─f74166e9-02d6-40da-b95e-9216c33b6ad1
 # ╟─0300c3e2-e77d-41ca-aece-8a7e9ab03459
 # ╟─e31700b7-eb2c-49f7-8683-6a30552ca712
+# ╟─0fd1e32b-e5dd-4f4d-b626-f0f528247b94
+# ╟─71860323-7387-4f43-a7fe-b323b0a94c41
 # ╟─ad92ca29-7738-49bc-9c64-1570b7b97846
 # ╠═715a9553-f3a4-43dd-b93d-021eaff71067
