@@ -1,13 +1,10 @@
 ### A Pluto.jl notebook ###
-# v0.19.27
+# v0.19.29
 
 using Markdown
 using InteractiveUtils
 
-# ╔═╡ c7e947eb-a51d-4456-a636-f61b971724c7
-using DiscreteValueIteration
-
-# ╔═╡ 99914226-eb68-4cf9-a688-2b8618587461
+# ╔═╡ 71860323-7387-4f43-a7fe-b323b0a94c41
 begin
 	import Pkg
 	Pkg.activate(mktempdir())
@@ -24,7 +21,28 @@ begin
 	using POMDPs, POMDPTools, QuickPOMDPs
 	using Plots, ColorSchemes, Colors
 	default(fontfamily="Computer Modern", framestyle=:box) # LaTex-style plots
+	md"> Julia package management."
+end
 
+# ╔═╡ c7e947eb-a51d-4456-a636-f61b971724c7
+using DiscreteValueIteration
+
+# ╔═╡ 39981cad-3875-4438-8af5-aaee151c6a0a
+using PlutoUI
+
+# ╔═╡ fa74acb0-1c29-11ec-0f1b-fd1757a25278
+md"""
+# Value Iteration
+The _value iteration_ algorithm uses _dynamic programming_ and the _Bellman equation_ to solve for the optimal policy in discrete MDPs (i.e., discrete states and actions).$^1$
+"""
+
+# ╔═╡ 9ef949e0-caf6-47e5-88ca-ea2d75f79443
+md"""
+## Grid World MDP
+"""
+
+# ╔═╡ 99914226-eb68-4cf9-a688-2b8618587461
+begin
 	struct State # State definition
 		x::Int
 		y::Int
@@ -48,8 +66,9 @@ begin
 		Nₐ = length(𝒜)
 		next_states = Vector{State}(undef, Nₐ + 1)
 		probabilities = zeros(Nₐ + 1)
+		p_transition = 0.7
 		for (i, a′) in enumerate(𝒜)
-			prob = (a′ == a) ? 0.7 : (1 - 0.7) / (Nₐ - 1)
+			prob = (a′ == a) ? p_transition : (1 - p_transition) / (Nₐ - 1)
 			destination = apply(s, a′)
 			next_states[i+1] = destination
 			if 1 ≤ destination.x ≤ 10 && 1 ≤ destination.y ≤ 10
@@ -74,8 +93,24 @@ begin
 		return 0
 	end
 
+	# create policy grid showing the best action in each state
+	function policy_grid(policy::Policy, xmax::Int, ymax::Int)
+	    arrows = Dict(UP => "↑",
+	                  DOWN => "↓",
+	                  LEFT => "←",
+	                  RIGHT => "→")
+	
+	    grid = Array{String}(undef, xmax, ymax)
+	    for x = 1:xmax, y = 1:xmax
+	        s = State(x, y)
+	        grid[x,y] = arrows[action(policy, s)]
+	    end
+	
+	    return grid
+	end
+	
 	function render(mdp, s=nothing;
-			values=nothing, show_grid=true, label_rewards=true,
+			values=nothing, show_grid=true, policy=nothing, label_rewards=true,
 			cmap=ColorScheme([RGB(0.7, 0, 0), RGB(1, 1, 1), RGB(0, 0.4, 0)])) 
 		gr()
 		s_valid = setdiff(states(mdp), [null_state])
@@ -100,6 +135,13 @@ begin
 				plot!(rectangle(1, 1, x-0.5, y-0.5), fillalpha=0, linecolor=:gray)
 			end
 		end
+		if !isnothing(policy)
+		    for x in 1:xmax, y in 1:ymax
+		        # display policy on the plot as arrows
+				grid = policy_grid(policy, xmax, ymax)
+				annotate!([(x, y, (grid[x,y], :center, 12, "Computer Modern"))])
+		    end
+		end
 		if !isnothing(s)
 			color = (s in terminal_states) ? "yellow" : "blue"
 			scatter!([s.x], [s.y], ms=8, c=color, alpha=0.9)
@@ -108,23 +150,14 @@ begin
 	end
 
 	abstract type GridWorld <: MDP{State, Action} end
-	
+
+	# Helper functions
+	POMDPs.action(policy::Dict, s) = policy[s]
+	POMDPs.value(U::Dict, s) = U[s]
+	(π::Policy)(s) = action(π, s) # π(s) sugar
+
 	md"> `Grid World MDP definition (unhide).`"
 end
-
-# ╔═╡ 39981cad-3875-4438-8af5-aaee151c6a0a
-using PlutoUI
-
-# ╔═╡ fa74acb0-1c29-11ec-0f1b-fd1757a25278
-md"""
-# Value Iteration
-The _value iteration_ algorithm uses _dynamic programming_ and the _Bellman equation_ to solve for the optimal policy in discrete MDPs (i.e., discrete states and actions).$^1$
-"""
-
-# ╔═╡ 9ef949e0-caf6-47e5-88ca-ea2d75f79443
-md"""
-## Grid World MDP
-"""
 
 # ╔═╡ 863b9fc0-3711-4729-b730-ae184ebba0b5
 mdp = QuickMDP(GridWorld,
@@ -209,6 +242,11 @@ md"""
 # ╔═╡ 6ae30851-49cc-4c8f-a1d9-262758882f01
 render(mdp; values=U)
 
+# ╔═╡ 187c2a14-1d58-4981-8a44-e70a12e1c83a
+md"""
+### Visualize policy $\pi(s)$ for all states $s$
+"""
+
 # ╔═╡ 7f1c6a83-9bd9-4e20-86da-7ad8e74e68ad
 md"""
 ## Asynchronous Value Iteration
@@ -245,6 +283,9 @@ solver = ValueIterationSolver();
 
 # ╔═╡ 94bd2d6a-480a-42a9-b2b0-665ca7d232a7
 policy = solve(solver, mdp);
+
+# ╔═╡ 37683a71-01f0-4a7e-98c1-750c581304ed
+render(mdp; values=U, policy=policy, label_rewards=false)
 
 # ╔═╡ 4ce68975-f936-4b9d-8c6d-3447474093ff
 md"""
@@ -322,20 +363,6 @@ md"""
 $$\pi^*(s) = \operatorname*{argmax}_{a \in \mathcal{A}}\left(R(s,a) + \gamma\sum_{s^\prime \in \mathcal{S}} T(s^\prime \mid s, a)U^*(s^\prime) \right)$$
 """
 
-# ╔═╡ 34d03da4-f95c-4dd2-8364-0b4b0307f875
-md"""
-## Helper functions
-"""
-
-# ╔═╡ b31b2b75-6bf4-4b44-839b-9043f85f0472
-POMDPs.action(policy::Dict, s) = policy[s]
-
-# ╔═╡ 76c59acf-8ad2-4c19-b34a-5917be3b75a5
-POMDPs.value(U::Dict, s) = U[s]
-
-# ╔═╡ c0db85c4-bd43-4773-8c7b-0e485c21dd55
-(π::Policy)(s) = action(π, s) # π(s) sugar
-
 # ╔═╡ ad92ca29-7738-49bc-9c64-1570b7b97846
 md"""
 ## References
@@ -349,6 +376,7 @@ TableOfContents(title="Value Iteration Algorithm")
 # ╔═╡ Cell order:
 # ╟─fa74acb0-1c29-11ec-0f1b-fd1757a25278
 # ╟─9ef949e0-caf6-47e5-88ca-ea2d75f79443
+# ╟─71860323-7387-4f43-a7fe-b323b0a94c41
 # ╟─99914226-eb68-4cf9-a688-2b8618587461
 # ╠═863b9fc0-3711-4729-b730-ae184ebba0b5
 # ╠═9654f2df-5aef-4ccc-8192-10b6f5c5f829
@@ -364,6 +392,8 @@ TableOfContents(title="Value Iteration Algorithm")
 # ╠═13947b73-27a7-4108-8ca0-0093e7eaea07
 # ╟─c799a2bc-f4b1-4512-98c8-0cf3d3f16772
 # ╠═6ae30851-49cc-4c8f-a1d9-262758882f01
+# ╟─187c2a14-1d58-4981-8a44-e70a12e1c83a
+# ╠═37683a71-01f0-4a7e-98c1-750c581304ed
 # ╟─7f1c6a83-9bd9-4e20-86da-7ad8e74e68ad
 # ╠═f06daa0b-d5ab-440f-a22b-12b0e018805d
 # ╠═12f3d708-c9f0-4acf-9e0b-b933649de50c
@@ -379,9 +409,5 @@ TableOfContents(title="Value Iteration Algorithm")
 # ╟─f74166e9-02d6-40da-b95e-9216c33b6ad1
 # ╟─0300c3e2-e77d-41ca-aece-8a7e9ab03459
 # ╟─e31700b7-eb2c-49f7-8683-6a30552ca712
-# ╟─34d03da4-f95c-4dd2-8364-0b4b0307f875
-# ╠═b31b2b75-6bf4-4b44-839b-9043f85f0472
-# ╠═76c59acf-8ad2-4c19-b34a-5917be3b75a5
-# ╠═c0db85c4-bd43-4773-8c7b-0e485c21dd55
 # ╟─ad92ca29-7738-49bc-9c64-1570b7b97846
 # ╠═715a9553-f3a4-43dd-b93d-021eaff71067
